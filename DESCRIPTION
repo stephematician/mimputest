@@ -1,0 +1,25 @@
+Package: miForang
+Title: Missing data imputation by missForest algorithm using ranger
+Version: 0.0.0.9000
+Authors@R: person("Stephen",
+           "Wade",
+           email = "stephematician@gmail.com",
+           role = c("aut", "cre"))
+Description: Performs imputation using the missForest algorithm by Stekhoven et
+    al. Single and experimental multiple imputation, and selected
+    changes to the training and prediction steps are available. For
+    each set of imputed values, calculates additional statistics to
+    monitor convergence.
+Depends:
+    R (>= 3.3.0)
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Suggests:
+    testthat,
+    tibble
+Imports:
+    ranger (>= 0.10.3),
+    rlang (>= 0.2.0),
+    stats
+RoxygenNote: 6.1.0
