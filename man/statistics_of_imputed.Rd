@@ -4,10 +4,10 @@
 \alias{statistics_of_imputed}
 \title{Calculate statistics of imputed data}
 \usage{
-statistics_of_imputed(X_predict)
+statistics_of_imputed(imputed)
 }
 \arguments{
-\item{X_predict}{named list;}
+\item{imputed}{named list;}
 }
 \description{
 Calculates certain selected statistics (aggregates) of imputed data

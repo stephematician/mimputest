@@ -4,10 +4,10 @@
 \alias{frequency_of_imputed}
 \title{Frequency of imputed values of categorical data}
 \usage{
-frequency_of_imputed(X_predict, to_categories = list())
+frequency_of_imputed(imputed, to_categories = list())
 }
 \arguments{
-\item{X_predict}{named list;}
+\item{imputed}{named list;}
 
 \item{to_categories}{named list;}
 }

@@ -2,7 +2,7 @@
 #'
 #' Calculates certain selected statistics (aggregates) of imputed data
 #'
-#' @param X_predict named list;
+#' @param imputed named list;
 #'
 #' @section To-do:
 #' \itemize{
@@ -11,35 +11,35 @@
 #' }
 #'
 #' @keywords internal
-statistics_of_imputed <- function(X_predict) {
+statistics_of_imputed <- function(imputed) {
 
     variable_names_ <- setNames(mapply(list,
-                                       variable=names(X_predict),
+                                       variable=names(imputed),
                                        SIMPLIFY=F),
-                                nm=names(X_predict))
+                                nm=names(imputed))
 
     # Aggregation helper - note 
-    aggregate_of_imputed <- function(X_predict, to_use, aggregate_imputed)
+    aggregate_of_imputed <- function(to_use, aggregate_imputed, imputed=imputed)
         do.call(rbind,
                 mapply(function(name, x)
                            data.frame(name,
                                       measure=aggregate_imputed,
                                       value=eval(sym(aggregate_imputed))(x)),
                        unname(variable_names_[to_use]),
-                       X_predict[to_use],
+                       imputed[to_use],
                        SIMPLIFY=F))
 
-    categorical_data <- names(X_predict)[!sapply(X_predict, is.numeric) |
-                                             !!sapply(X_predict, is.integer)]
-    ordered_data <- names(X_predict)[!!sapply(X_predict, is.ordered) | 
-                                         !!sapply(X_predict, is.integer)]
-    continuous_data <- names(X_predict)[!!sapply(X_predict, is.numeric) &
-                                            !sapply(X_predict, is.integer)]
+    categorical_data <- names(imputed)[!sapply(imputed, is.numeric) |
+                                           !!sapply(imputed, is.integer)]
+    ordered_data <- names(imputed)[!!sapply(imputed, is.ordered) | 
+                                       !!sapply(imputed, is.integer)]
+    continuous_data <- names(imputed)[!!sapply(imputed, is.numeric) &
+                                          !sapply(imputed, is.integer)]
 
-    rbind(aggregate_of_imputed(X_predict, categorical_data, 'entropy'),
-          aggregate_of_imputed(X_predict, ordered_data, 'leiks_D'),
-          aggregate_of_imputed(X_predict, continuous_data, 'var'),
-          aggregate_of_imputed(X_predict, continuous_data, 'mean'))
+    rbind(aggregate_of_imputed(categorical_data, 'entropy'),
+          aggregate_of_imputed(ordered_data, 'leiks_D'),
+          aggregate_of_imputed(continuous_data, 'var'),
+          aggregate_of_imputed(continuous_data, 'mean'))
 
 }
 

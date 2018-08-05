@@ -2,7 +2,7 @@
 #'
 #' Frequency of imputed values of categorical data
 #'
-#' @param X_predict named list;
+#' @param imputed named list;
 #' @param to_categories named list;
 #'
 #' @section To-do:
@@ -12,13 +12,13 @@
 #' }
 #'
 #' @keywords internal
-frequency_of_imputed <- function(X_predict, to_categories=list()) {
+frequency_of_imputed <- function(imputed, to_categories=list()) {
 
     variable_names_ <- unname(mapply(list,
-                                     variable=names(X_predict),
+                                     variable=names(imputed),
                                      SIMPLIFY=F))
 
-    categories <- lapply(X_predict, levels)
+    categories <- lapply(imputed, levels)
     categories[names(to_categories)] <- lapply(to_categories, names)
 
     no_categories <- names(categories)[sapply(categories, is.null)]
@@ -34,7 +34,7 @@ frequency_of_imputed <- function(X_predict, to_categories=list()) {
                                            nm=c('category',
                                                 'frequency'))),
                    variable_names_,
-                   mapply(factor, X_predict, levels=categories, SIMPLIFY=F),
+                   mapply(factor, imputed, levels=categories, SIMPLIFY=F),
                    SIMPLIFY=F))
 
 }

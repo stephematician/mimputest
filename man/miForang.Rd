@@ -50,8 +50,8 @@ the missForest procedure given two arguments; \itemize{
     \item a list with and item indicating the missing (\code{T})
           or not-missing (\code{F}) status of each column of the
           first argument,
-} the default \code{\link{no_information_impute}}
-serves as an example.}
+} the default \code{\link{no_information_impute}} serves as an
+example.}
 
 \item{stop.measure}{function;
 evaluates the difference or relationship between the two most
@@ -62,10 +62,12 @@ following arguments;
          appearance by row) for each column in the data set;}
      \item{\code{Y}}{named list with imputed values (in order of
          appearance by row) for each column in the data set;}
-     \item{X_init}{the original (mised-type) data set with missing
-          values replaced as at the starting point of missForest;}
-     \item{indicator}{a list with the missing (\code{=T}) or not
-          missing (\code{=F}) status of the original data set;}
+     \item{\code{X_init}}{the original (mised-type) data set with
+          missing values replaced as at the starting point of
+          missForest;}
+     \item{\code{indicator}}{a list with the missing (\code{=T})
+          or not missing (\code{=F}) status of the original data
+          set;}
 } and should return a numeric (vector), the default
 \code{\link{measure_correlation}} serves as an example, or see the
 original measure proposed by Stekhoven and Buehlmann (2012) in
@@ -84,11 +86,8 @@ variable given by the name of the item.}
 of trees in each forest.}
 }
 \value{
-list
+list;
             containing the following items \describe{
-                \item{X}{data.frame; original data}
-                \item{n}{integer; number of imputations}
-                \item{call}{call; the call used}
                 \item{TBD}{to be determined...possibly mids object}
             }
 }

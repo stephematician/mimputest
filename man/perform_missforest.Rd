@@ -54,10 +54,12 @@ following arguments;
          appearance by row) for each column in the data set;}
      \item{\code{Y}}{named list with imputed values (in order of
          appearance by row) for each column in the data set;}
-     \item{X_init}{the original (mised-type) data set with missing
-          values replaced as at the starting point of missForest;}
-     \item{indicator}{a list with the missing (\code{=T}) or not
-          missing (\code{=F}) status of the original data set;}
+     \item{\code{X_init}}{the original (mised-type) data set with
+          missing values replaced as at the starting point of
+          missForest;}
+     \item{\code{indicator}}{a list with the missing (\code{=T})
+          or not missing (\code{=F}) status of the original data
+          set;}
 } and should return a numeric (vector), the default
 \code{\link{measure_correlation}} serves as an example, or see the
 original measure proposed by Stekhoven and Buehlmann (2012) in
@@ -89,7 +91,9 @@ named list;
                 }
                 \item{\code{stop_measures}}{list; containing the value
                     returned by \code{stop.measure} at each iteration.}
-                \item{\code{X_predict}}{list; }
+                \item{\code{imputed}}{list; each item is a named list of
+                    imputed values at each iteration, in order of appearance
+                    in X_init.}
             }
 }
 \description{

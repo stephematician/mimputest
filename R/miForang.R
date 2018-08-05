@@ -87,8 +87,8 @@
 #'                \item a list with and item indicating the missing (\code{T})
 #'                      or not-missing (\code{F}) status of each column of the
 #'                      first argument,
-#'            } the default \code{\link{no_information_impute}}
-#'            serves as an example.
+#'            } the default \code{\link{no_information_impute}} serves as an
+#'            example.
 #' @param stop.measure function;
 #'            evaluates the difference or relationship between the two most
 #'            recently completed data sets during iteration, must accept the
@@ -98,10 +98,12 @@
 #'                     appearance by row) for each column in the data set;}
 #'                 \item{\code{Y}}{named list with imputed values (in order of
 #'                     appearance by row) for each column in the data set;}
-#'                 \item{X_init}{the original (mised-type) data set with missing
-#'                      values replaced as at the starting point of missForest;}
-#'                 \item{indicator}{a list with the missing (\code{=T}) or not
-#'                      missing (\code{=F}) status of the original data set;}
+#'                 \item{\code{X_init}}{the original (mised-type) data set with
+#'                      missing values replaced as at the starting point of
+#'                      missForest;}
+#'                 \item{\code{indicator}}{a list with the missing (\code{=T})
+#'                      or not missing (\code{=F}) status of the original data
+#'                      set;}
 #'            } and should return a numeric (vector), the default
 #'            \code{\link{measure_correlation}} serves as an example, or see the
 #'            original measure proposed by Stekhoven and Buehlmann (2012) in
@@ -115,11 +117,8 @@
 #' @param ... further arguments passed to all calls to 
 #'            \code{\link[ranger]{ranger}}, e.g. \code{num.trees} for the number
 #'            of trees in each forest.
-#' @return list
+#' @return list;
 #'             containing the following items \describe{
-#'                 \item{X}{data.frame; original data}
-#'                 \item{n}{integer; number of imputations}
-#'                 \item{call}{call; the call used}
 #'                 \item{TBD}{to be determined...possibly mids object}
 #'             }
 #'
@@ -250,18 +249,13 @@ miForang <- function(X,
                                          loop.limit, overrides)
 
         # convert back to integer/logical
-        res[[j]]$X_predict <- lapply(res[[j]]$X_predict,
-                                     unmap_categories,
-                                     to_categories)
+        res[[j]]$imputed <- lapply(res[[j]]$imputed,
+                                   unmap_categories,
+                                   to_categories)
 
         when_verbose_print(paste('  - imputation', j, 'complete.'))
     }
 
-    # Post process the results
-    #c(list(X=X,
-    #       n=as.integer(n),
-    #       call=match.call()),
-    #       res=lapply(res, post_process_missforest))
     res <- lapply(res, post_process_missforest, to_categories=to_categories)
 
 }

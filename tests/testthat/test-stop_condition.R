@@ -1,6 +1,10 @@
 context('stop_condition')
 
-test_that('null', {
+test_that('both null', {
+    expect_true(stop_condition(NULL, NULL))
+})
+
+test_that('previous null', {
     expect_false(stop_condition(NULL, 0))
 })
 

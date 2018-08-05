@@ -72,7 +72,9 @@
 #'                 }
 #'                 \item{\code{stop_measures}}{list; containing the value
 #'                     returned by \code{stop.measure} at each iteration.}
-#'                 \item{\code{X_predict}}{list; }
+#'                 \item{\code{imputed}}{list; each item is a named list of
+#'                     imputed values at each iteration, in order of appearance
+#'                     in X_init.}
 #'             }
 #'
 #' @section To-do:
@@ -113,11 +115,13 @@ perform_missforest <- function(X_init,
                                overrides=list()) {
 
     stop_measures <- list(NULL)
-    oob_error <- data.frame()
-    X_predict <- list(mapply(subset,
-                             X_init[order.impute],
-                             indicator[order.impute],
-                             SIMPLIFY=F))
+    oob_error <- data.frame(setNames(lapply(order.impute,
+                                            function(x) numeric(0)),
+                                     order.impute))
+    imputed <- list(mapply(subset,
+                           X_init[order.impute],
+                           indicator[order.impute],
+                           SIMPLIFY=F))
     data_ <- X_init
     converged <- F
     oob_measure <- factor(setNames(rep(NA, ncol(X_init)), nm=names(X_init)),
@@ -126,9 +130,16 @@ perform_missforest <- function(X_init,
     oob_measure[is.na(oob_measure)] <- 'mse'
     n_train <- sapply(indicator, function(x) sum(!x | !obs.only))
 
+    if (!length(order.impute))
+        return(list(converged=NULL,
+                    imputed=imputed,
+                    iterations=0L,
+                    oob_error=oob_error,
+                    stop_measures=stop_measures[-1]))
+
     for (j in seq_len(loop.limit)) {
 
-        X_predict[[j+1]] <- list()
+        imputed[[j+1]] <- list()
  
         for (v in order.impute) {
 
@@ -149,17 +160,17 @@ perform_missforest <- function(X_init,
                               )
                           )
 
-            X_predict[[j+1]][[v]] <- sample_from_ranger(ranger_fit,
-                                                        data_[indicator[[v]],],
-                                                        v,
-                                                        tree.imp)
+            imputed[[j+1]][[v]] <- sample_from_ranger(ranger_fit,
+                                                      data_[indicator[[v]],],
+                                                      v,
+                                                      tree.imp)
             oob_error <- rbind(oob_error,
                                data.frame(iteration=j,
                                           variable=v,
-                                          measure=oob_measure[v],
+                                          measure=unname(oob_measure[v]),
                                           value=ranger_fit$prediction.error))
             if (gibbs) # update as predictions/imputations available
-                data_[indicator[[v]],v] <- X_predict[[j+1]][[v]]
+                data_[indicator[[v]],v] <- imputed[[j+1]][[v]]
 
         }
 
@@ -167,11 +178,11 @@ perform_missforest <- function(X_init,
             data_[order.impute] <- mapply(`[<-`,
                                           data_[order.impute],
                                           indicator[order.impute],
-                                          value=X_predict[[j+1]],
+                                          value=imputed[[j+1]],
                                           SIMPLIFY=F)
 
-        stop_measures[[j+1]] <- stop.measure(X_predict[[j]], X_predict[[j+1]],
-                                                     X_init,        indicator)
+        stop_measures[[j+1]] <- stop.measure(imputed[[j]], imputed[[j+1]],
+                                                   X_init,      indicator)
 
         if (stop_condition(stop_measures[[j]], stop_measures[[j+1]])) {
             converged <- T
@@ -181,9 +192,10 @@ perform_missforest <- function(X_init,
     }
 
     list(converged=converged,
+         imputed=imputed,
+         iterations=length(stop_measures)-1L,
          oob_error=oob_error,
-         stop_measures=stop_measures[-1],
-         X_predict=X_predict)
+         stop_measures=stop_measures[-1])
 
 }
 

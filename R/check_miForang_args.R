@@ -13,6 +13,9 @@ check_miForang_args <- function(           X,          n, order.impute,
 
     if (length(n) != 1)
         msgs <- c(msgs, 'n is not a scalar value.')
+ 
+    if (n < 0)
+        msgs <- c(msgs, 'n must be non-negative')
 
     if (length(gibbs) != 1)
         msgs <- c(msgs, 'gibbs is not a scalar value')
@@ -38,6 +41,9 @@ check_miForang_args <- function(           X,          n, order.impute,
 
     if (length(loop.limit) != 1)
         msgs <- c(msgs, 'loop.limit is not a scalar value.')
+
+    if (loop.limit < 0)
+        msgs <- c(msgs, 'loop.limit must be non-negative')
 
     if (length(msgs) > 0)
         stop(paste(msgs, collapse='\n'))

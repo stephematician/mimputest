@@ -1,16 +1,16 @@
 # Post process a single iteration
-post_process_iteration <- function(X_predict,
+post_process_iteration <- function(imputed,
                                    to_categories=list(),
                                    iteration=data.frame(iteration=0)) {
 
-    categorical_data <- names(X_predict)[!sapply(X_predict, is.numeric) |
-                                             !!sapply(X_predict, is.integer)]
+    categorical_data <- names(imputed)[!sapply(imputed, is.numeric) |
+                                           !!sapply(imputed, is.integer)]
 
     list(frequency=data.frame(iteration,
-                              frequency_of_imputed(X_predict[categorical_data],
+                              frequency_of_imputed(imputed[categorical_data],
                                                    to_categories)),
          statistics=data.frame(iteration,
-                               statistics_of_imputed(X_predict)))
+                               statistics_of_imputed(imputed)))
 
 }
 
