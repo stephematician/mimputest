@@ -124,9 +124,10 @@ perform_missforest <- function(X_init,
                            SIMPLIFY=F))
     data_ <- X_init
     converged <- F
-    oob_measure <- factor(setNames(rep(NA, ncol(X_init)), nm=names(X_init)),
+    oob_measure <- factor(setNames(rep(NA, length(order.impute)),
+                                   nm=order.impute),
                           levels=c('mse', 'pfc'))
-    oob_measure[sapply(X_init, is.factor)] <- 'pfc'
+    oob_measure[sapply(X_init[order.impute], is.factor)] <- 'pfc'
     oob_measure[is.na(oob_measure)] <- 'mse'
     n_train <- sapply(indicator, function(x) sum(!x | !obs.only))
 
@@ -145,7 +146,7 @@ perform_missforest <- function(X_init,
 
             # TODO: might need to store this
             if (boot.train) {
-                rows <- sample.int(n_train, replace=T) 
+                rows <- sample.int(n_train, replace=T)
             } else
                 rows <- seq_len(n_train[[v]])
 
@@ -161,7 +162,9 @@ perform_missforest <- function(X_init,
                           )
 
             imputed[[j+1]][[v]] <- sample_from_ranger(ranger_fit,
-                                                      data_[indicator[[v]],],
+                                                      data_[indicator[[v]],
+                                                            T,
+                                                            drop=F],
                                                       v,
                                                       tree.imp)
             oob_error <- rbind(oob_error,

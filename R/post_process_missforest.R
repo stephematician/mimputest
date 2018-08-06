@@ -2,7 +2,7 @@
 post_process_missforest <- function(res, to_categories) {
 
     iterations_ <- unname(mapply(list,
-                                 iteration=1L - seq_len(1L + res$iterations),
+                                 iteration=seq_len(1L + res$iterations) - 1L,
                                  SIMPLIFY=F))
 
     aggregates <- mapply(post_process_iteration,

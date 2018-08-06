@@ -19,7 +19,7 @@ statistics_of_imputed <- function(imputed) {
                                 nm=names(imputed))
 
     # Aggregation helper - note 
-    aggregate_of_imputed <- function(to_use, aggregate_imputed, imputed=imputed)
+    aggregate_of_imputed <- function(to_use, aggregate_imputed)
         do.call(rbind,
                 mapply(function(name, x)
                            data.frame(name,

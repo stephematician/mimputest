@@ -28,11 +28,10 @@ test_that('dry run iris', {
 
     # Check that initial data was recorded correctly
     expect_named(r$imputed[[1]], names(iris), ignore.order=T)
-    for (column_name in names(iris)) {
+    for (column_name in names(iris))
         with(r,
              expect_identical(imputed[[1]][[!!column_name]],
                               iris[indicator[[!!column_name]], !!column_name]))
-    }
 
 })
 
@@ -51,12 +50,6 @@ test_that('all but one in a row iris', {
                             loop.limit=10L)
 
     # Check presence and type of returned values
-    expect_type(r, 'list')
-    expect_named(r,
-                 c('converged',       'imputed', 'iterations',
-                   'oob_error', 'stop_measures'),
-                 ignore.order=T)
-
     expect_true(r$converged)
 
     expect_is(r$iterations, 'integer')
@@ -74,13 +67,22 @@ test_that('all but one in a row iris', {
 
     # Check that initial data was recorded correctly
     expect_named(r$imputed[[1]], names(iris), ignore.order=T)
-    for (column_name in names(iris)) {
+    for (column_name in names(iris))
         with(r,
              expect_identical(imputed[[1]][[!!column_name]],
                               iris[indicator[[!!column_name]], !!column_name]))
-    }
 
     # Check classes and length of all other imputed data
+    for (column_name in names(iris)) {
+        for (j in seq_along(r$imputed))
+            with(r,
+                 expect_identical(attributes(imputed[[!!j]][[!!column_name]]),
+                                  attributes(iris[indicator[[!!column_name]],
+                                                  !!column_name])))
+            with(r,
+                 expect_identical(length(imputed[[!!j]][[!!column_name]]),
+                                  sum(indicator[[!!column_name]])))
+    }
 
 })
 

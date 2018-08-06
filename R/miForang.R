@@ -215,12 +215,16 @@ miForang <- function(X,
 
     # Convert integers and logical values to factors
     to_categories <- get_maps_to_categories(X[v_use])
-    to_categorical_functions <- sapply(X[names(to_categories)],
-                                       function(j, x) unname(x[j]),
+    to_categorical_functions <- lapply(X[names(to_categories)],
+                                       function(j, x)
+                                           unname(x[[storage.mode(j)]]),
                                        x=list('integer'=as.ordered,
                                               'logical'=as.factor))
 
-    X_init_call <- call2(X.init.fn, X=X[v_use], indicator=indicator)
+    # invoke as.data.frame here due to ranger not supporting tibble argument
+    X_init_call <- call2(X.init.fn,
+                         X=as.data.frame(X[v_use]),
+                         indicator=indicator)
 
     ranger_call <- call2(ranger::ranger,
                          write.forest=T,
@@ -238,7 +242,7 @@ miForang <- function(X,
         if (length(msgs) > 0)
             stop(paste(msgs, collapse='\n'))
 
-        X_init[names(to_categories)] <- mapply(do.call,
+        X_init[names(to_categories)] <- mapply(function(f, x) f(x),
                                                to_categorical_functions,
                                                X_init[names(to_categories)],
                                                SIMPLIFY=F)
@@ -256,8 +260,7 @@ miForang <- function(X,
         when_verbose_print(paste('  - imputation', j, 'complete.'))
     }
 
-    res <- lapply(res, post_process_missforest, to_categories=to_categories)
+    lapply(res, post_process_missforest, to_categories=to_categories)
 
 }
-
 

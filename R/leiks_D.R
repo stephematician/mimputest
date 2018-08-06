@@ -21,6 +21,6 @@
 #'
 #' @keywords internal
 leiks_D <- function(x, freq=table(as.ordered(x)), cdf=cumsum(freq) / sum(freq))
-    2 * sum((cdf < 0.5) * cdf + (1 - 2 * cdf) * (cdf >= 0.5)) /
+    -2 * sum((cdf < 0.5) * cdf + (1 - 2 * cdf) * (cdf >= 0.5)) /
         (length(freq) - 1)
 
