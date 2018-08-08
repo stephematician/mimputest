@@ -226,14 +226,15 @@ miForang <- function(X,
                          X=as.data.frame(X[v_use]),
                          indicator=indicator)
 
-    ranger_call <- call2(ranger::ranger,
-                         write.forest=T,
-                         verbose=verbose,
-                         respect.unordered.factors='order', # recommended?
-                         !!! ranger_args)
+    ranger_call <- call_modify(call2(ranger::ranger,
+                                     write.forest=T,
+                                     verbose=verbose),
+                               !!! ranger_args)
 
     res <- list()
     when_verbose_print('miForang: begin imputations')
+
+    which_imputed <- lapply(indicator, which)
 
     for (j in seq_len(n)) {
 
@@ -256,6 +257,7 @@ miForang <- function(X,
         res[[j]]$imputed <- lapply(res[[j]]$imputed,
                                    unmap_categories,
                                    to_categories)
+        res[[j]]$which_imputed <- which_imputed
 
         when_verbose_print(paste('  - imputation', j, 'complete.'))
     }
