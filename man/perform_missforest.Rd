@@ -7,7 +7,7 @@
 perform_missforest(X_init, indicator, ranger_call, order.impute,
   gibbs = F, tree.imp = F, boot.train = F, obs.only = T,
   stop.measure = measure_correlation, loop.limit = 10L,
-  overrides = list())
+  clean.step = list(), overrides = list())
 }
 \arguments{
 \item{X_init}{data.frame;
@@ -67,6 +67,16 @@ original measure proposed by Stekhoven and Buehlmann (2012) in
 
 \item{loop.limit}{numeric;
 maximum number of iterations within missForest procedure.}
+
+\item{clean.step}{named list;
+each item is a function to clean or post-process the named imputed
+data immediately after it is imputed, taking two arguments;
+\itemize{
+    \item the subset of the data used in the current training step
+          which had missing values of the named data,
+    \item the most recently imputed values of the named data,
+} and should return (post-processed) data of the same length and
+type as the second argument.}
 
 \item{overrides}{named list;
 (variable-wise) over-rides for arguments passed to

@@ -8,7 +8,7 @@ miForang(X, n = 5L, order.impute = NULL, gibbs = F, tree.imp = F,
   boot.train = F, obs.only = T, verbose = F,
   X.init.fn = no_information_impute,
   stop.measure = measure_correlation, loop.limit = 10L,
-  overrides = list(), ...)
+  overrides = list(), clean.step = list(), ...)
 }
 \arguments{
 \item{X}{data.frame;
@@ -80,6 +80,16 @@ maximum number of iterations within missForest procedure.}
 (variable-wise) over-rides for arguments passed to
 \code{\link[ranger]{ranger}} when training on the response
 variable given by the name of the item.}
+
+\item{clean.step}{named list;
+each item is a function to clean or post-process the named imputed
+data immediately after it is imputed, taking two arguments;
+\itemize{
+    \item the subset of the data used in the current training step
+          which had missing values of the named data,
+    \item the most recently imputed values of the named data,
+} and should return (post-processed) data of the same length and
+type as the second argument.}
 
 \item{...}{further arguments passed to all calls to 
 \code{\link[ranger]{ranger}}, e.g. \code{num.trees} for the number

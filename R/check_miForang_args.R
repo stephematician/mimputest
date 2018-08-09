@@ -2,12 +2,14 @@
 check_miForang_args <- function(           X,          n, order.impute,
                                        gibbs,   tree.imp,   boot.train,
                                     obs.only,    verbose,    X.init.fn,
-                                stop.measure, loop.limit,    overrides) {
+                                stop.measure, loop.limit,    overrides,
+                                  clean.step) {
 
     check_miForang_arg_types(           X,          n, order.impute,
                                     gibbs,   tree.imp,   boot.train,
                                  obs.only,    verbose,    X.init.fn,
-                             stop.measure, loop.limit,    overrides)
+                             stop.measure, loop.limit,    overrides,
+                               clean.step)
 
     msgs <- is_valid_data(X)
 
@@ -44,6 +46,8 @@ check_miForang_args <- function(           X,          n, order.impute,
 
     if (loop.limit < 0)
         msgs <- c(msgs, 'loop.limit must be non-negative')
+
+    msgs <- is_valid_clean_step(X, clean.step, msgs)
 
     if (length(msgs) > 0)
         stop(paste(msgs, collapse='\n'))

@@ -2,7 +2,8 @@
 check_miForang_arg_types <- function(           X,          n, order.impute,
                                             gibbs,   tree.imp,   boot.train,
                                          obs.only,    verbose,    X.init.fn,
-                                     stop.measure, loop.limit,    overrides) {
+                                     stop.measure, loop.limit,    overrides,
+                                       clean.step) {
 
     msg_if_not <- function(condition, msgs=list())
         if (!condition)
@@ -26,7 +27,8 @@ check_miForang_arg_types <- function(           X,          n, order.impute,
                         msg_if_not(is.function(X.init.fn)),
                         msg_if_not(is.function(stop.measure)),
                         msg_if_not(is.numeric(loop.limit)),
-                        msg_if_not(is.list(overrides)))
+                        msg_if_not(is.list(overrides)),
+                        msg_if_not(is.list(clean.step)))
 
     if (length(type_check_msg > 0))
         stop(paste(type_check_msg, collapse='\n'))

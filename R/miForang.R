@@ -114,6 +114,15 @@
 #'            (variable-wise) over-rides for arguments passed to
 #'            \code{\link[ranger]{ranger}} when training on the response
 #'            variable given by the name of the item.
+#' @param clean.step named list;
+#'            each item is a function to clean or post-process the named imputed
+#'            data immediately after it is imputed, taking two arguments;
+#'            \itemize{
+#'                \item the subset of the data used in the current training step
+#'                      which had missing values of the named data,
+#'                \item the most recently imputed values of the named data,
+#'            } and should return (post-processed) data of the same length and
+#'            type as the second argument.
 #' @param ... further arguments passed to all calls to 
 #'            \code{\link[ranger]{ranger}}, e.g. \code{num.trees} for the number
 #'            of trees in each forest.
@@ -174,15 +183,17 @@ miForang <- function(X,
                      stop.measure=measure_correlation,
                      loop.limit=10L,
                      overrides=list(),
+                     clean.step=list(),
                      ...) {
 
     ranger_args <- enquos(...)
 
     when_verbose_print <- function(...) if (verbose) print(...)
 
-    check_miForang_args(        X,            n, order.impute,     gibbs,
-                         tree.imp,   boot.train,     obs.only,   verbose,
-                        X.init.fn, stop.measure,   loop.limit, overrides)
+    check_miForang_args(         X,            n, order.impute,     gibbs,
+                          tree.imp,   boot.train,     obs.only,   verbose,
+                         X.init.fn, stop.measure,   loop.limit, overrides,
+                        clean.step)
 
     n_obs <- nrow(X)
 

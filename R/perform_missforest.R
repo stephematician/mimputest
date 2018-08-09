@@ -112,6 +112,7 @@ perform_missforest <- function(X_init,
                                obs.only=T,
                                stop.measure=measure_correlation,
                                loop.limit=10L,
+                               clean.step=list(),
                                overrides=list()) {
 
     stop_measures <- list(NULL)
@@ -172,6 +173,12 @@ perform_missforest <- function(X_init,
                                           variable=v,
                                           measure=unname(oob_measure[v]),
                                           value=ranger_fit$prediction.error))
+            # call post-processing/cleaning function
+            if (is.function(clean.step[[v]]))
+                imputed[[j+1]][[v]] <- clean.step[[v]](data_[indicator[[v]],
+                                                             T,
+                                                             drop=F],
+                                                       imputed[[j+1]][[v]])
             if (gibbs) # update as predictions/imputations available
                 data_[indicator[[v]],v] <- imputed[[j+1]][[v]]
 
