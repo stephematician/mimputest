@@ -262,7 +262,7 @@ miForang <- function(X,
         res[[j]] <- perform_missforest(      X_init, indicator,  ranger_call,
                                        order.impute,     gibbs,     tree.imp,
                                          boot.train,  obs.only, stop.measure,
-                                         loop.limit, overrides)
+                                         loop.limit, overrides,   clean.step)
 
         # convert back to integer/logical
         res[[j]]$imputed <- lapply(res[[j]]$imputed,

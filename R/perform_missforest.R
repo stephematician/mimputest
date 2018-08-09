@@ -112,8 +112,8 @@ perform_missforest <- function(X_init,
                                obs.only=T,
                                stop.measure=measure_correlation,
                                loop.limit=10L,
-                               clean.step=list(),
-                               overrides=list()) {
+                               overrides=list(),
+                               clean.step=list()) {
 
     stop_measures <- list(NULL)
     oob_error <- data.frame(setNames(lapply(order.impute,
