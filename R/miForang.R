@@ -127,8 +127,24 @@
 #'            \code{\link[ranger]{ranger}}, e.g. \code{num.trees} for the number
 #'            of trees in each forest.
 #' @return list;
-#'             containing the following items \describe{
-#'                 \item{TBD}{to be determined...possibly mids object}
+#'             containing the following items; \describe{
+#'                 \item{call}{the call used to create the multiply imputed
+#'                     data sets;}
+#'                 \item{results}{list where each item (numbered) is itself a
+#'                     named list of the output for an imputed data set;
+#'                     \describe{
+#'                         \item{\code{converged}}{boolean convergence status;}
+#'                         \item{\code{imputed}}{list of imputed data by
+#'                             iteration and variable;}
+#'                         \item{\code{iterations}}{numeric count of iterations
+#'                             before stopping criteria met;}
+#'                         \item{\code{oob_error}}{list of oob error by
+#'                             iteration and variable;}
+#'                         \item{\code{stop_measures}}{output of the call to
+#'                             \code{stop.measure} at each iteration;}
+#'                     }
+#'                 \item{which_imputed}{named list of which rows the imputed
+#'                     named data belong to.}
 #'             }
 #'
 #' @section To-do:
@@ -268,12 +284,15 @@ miForang <- function(X,
         res[[j]]$imputed <- lapply(res[[j]]$imputed,
                                    unmap_categories,
                                    to_categories)
-        res[[j]]$which_imputed <- which_imputed
 
         when_verbose_print(paste('  - imputation', j, 'complete.'))
     }
 
-    lapply(res, post_process_missforest, to_categories=to_categories)
+    list(call=match.call(),
+         results=lapply(res,
+                        post_process_missforest,
+                        to_categories=to_categories),
+         which_imputed=which_imputed)
 
 }
 

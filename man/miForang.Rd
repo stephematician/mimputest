@@ -95,12 +95,6 @@ type as the second argument.}
 \code{\link[ranger]{ranger}}, e.g. \code{num.trees} for the number
 of trees in each forest.}
 }
-\value{
-list;
-            containing the following items \describe{
-                \item{TBD}{to be determined...possibly mids object}
-            }
-}
 \description{
 Missing data (multiple) imputation using the missForest algorithm by
 Stekhoven and Buehlmann (2012). The ranger (Wright and Ziegler, 2017) fast
