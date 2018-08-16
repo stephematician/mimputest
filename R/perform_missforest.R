@@ -173,23 +173,26 @@ perform_missforest <- function(X_init,
                                           variable=v,
                                           measure=unname(oob_measure[v]),
                                           value=ranger_fit$prediction.error))
-            # call post-processing/cleaning function
-            if (is.function(clean.step[[v]]))
-                imputed[[j+1]][[v]] <- clean.step[[v]](data_[indicator[[v]],
-                                                             T,
-                                                             drop=F],
-                                                       imputed[[j+1]][[v]])
-            if (gibbs) # update as predictions/imputations available
+            if (gibbs) {
+                # clean imputed and update training data as available
+                if (is.function(clean.step[[v]]))
+                    imputed[[j+1]][[v]] <- clean.step[[v]](data_[indicator[[v]],
+                                                                 T,
+                                                                 drop=F],
+                                                           imputed[[j+1]][[v]])
                 data_[indicator[[v]],v] <- imputed[[j+1]][[v]]
-
+            }
         }
 
-        if (!gibbs) # update once all predictions/imputations made
-            data_[order.impute] <- mapply(`[<-`,
-                                          data_[order.impute],
-                                          indicator[order.impute],
-                                          value=imputed[[j+1]],
-                                          SIMPLIFY=F)
+        if (!gibbs)
+            for (v in order.impute) {
+                if (is.function(clean.step[[v]]))
+                    imputed[[j+1]][[v]] <- clean.step[[v]](data_[indicator[[v]],
+                                                                 T,
+                                                                 drop=F],
+                                                           imputed[[j+1]][[v]])
+                data_[indicator[[v]],v] <- imputed[[j+1]][[v]]
+            }
 
         stop_measures[[j+1]] <- stop.measure(imputed[[j]], imputed[[j+1]],
                                                    X_init,      indicator)

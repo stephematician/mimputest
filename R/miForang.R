@@ -219,6 +219,9 @@ miForang <- function(X,
     if (!identical(floor(loop.limit), as.numeric(loop.limit)))
         warning('non-integer value of loop.limit supplied.')
 
+    if (inherits(X, 'grouped_df'))
+        warning('groups in X will be ignored.')
+
     # store location of missing data as list
     indicator <- lapply(X, is.na)
 

@@ -30,6 +30,7 @@
 #' @author Stephen Wade \email{stephematician@@gmail.com}
 #'
 #' @importFrom stats setNames cor predict
+#' @importFrom utils combn
 #' @import rlang
 #'
 #' @docType package
