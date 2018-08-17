@@ -39,10 +39,14 @@
 #' @export
 sample_impute <- function(X, indicator=lapply(X, is.na)) {
 
-    indices <- mapply(sample,
-                      x=lapply(indicator, function(x) which(!x)),
-                      size=lapply(indicator, sum),
-                      MoreArgs=list(replace=T),
+    n_ <- lapply(indicator, sum)
+    indices <- mapply(`[`,
+                      lapply(indicator, function(x) which(!x)),
+                      mapply(sample.int,
+                             n=mapply(`-`, lapply(indicator, length), n_),
+                             size=n_,
+                             MoreArgs=list(replace=T),
+                             SIMPLIFY=F),
                       SIMPLIFY=F)
 
     X[] <- mapply(`[<-`,
