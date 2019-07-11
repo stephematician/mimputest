@@ -44,13 +44,13 @@
 #'                     data sets (see \code{\link{stationary_rate}}).}
 #'             }
 #'
-#' @seealso \code{\link[stats]{cor}} \code{\link{miForang}}
+#' @seealso \code{\link[stats]{cor}} \code{\link{smirf}}
 #'          \code{\link{stationary_rate}}
 #'
 #' @examples
 #' \dontrun{
-#' # simply pass to miForang
-#' miForang(iris, stop.measure=measure_correlation)
+#' # simply pass to smirf 
+#' smirf(iris, stop.measure=measure_correlation)
 #' }
 #' @export
 measure_correlation <- function(X, Y, X_init, indicator, method='spearman') {

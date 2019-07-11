@@ -1,9 +1,9 @@
-# Check argument types in call to miForang
-check_miForang_arg_types <- function(           X,          n, order.impute,
-                                            gibbs,   tree.imp,   boot.train,
-                                         obs.only,    verbose,    X.init.fn,
-                                     stop.measure, loop.limit,    overrides,
-                                       clean.step) {
+# Check argument types in call to smirf
+check_smirf_arg_types <- function(           X,          n, order.impute,
+                                         gibbs,   tree.imp,   boot.train,
+                                      obs.only,    verbose,    X.init.fn,
+                                  stop.measure, loop.limit,    overrides,
+                                    clean.step) {
 
     msg_if_not <- function(condition, msgs=list())
         if (!condition)

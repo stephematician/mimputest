@@ -1,0 +1,39 @@
+#' \pkg{smirf}: Single or multiple imputation of missing data using random forests
+#'
+#' This code is licensed under the MIT license
+#' \url{https://www.r-project.org/Licenses/MIT}, and you may use this package
+#' strictly under those terms
+#'
+#' @references
+#'
+#' Stekhoven, D.J. and Buehlmann, P., 2012. MissForest--non-parametric
+#' missing value imputation for mixed-type data. \emph{Bioinformatics, 28}(1),
+#' pp. 112-118.
+#' \href{https://dx.doi.org/10.1093/bioinformatics/btr597}{
+#'   doi.1.1093/bioinformatics/btr597
+#' }
+#'
+#' Van Buuren, S., Brand, J.P., Groothuis-Oudshoorn, C.G. and Rubin, D.B., 2006.
+#' Fully conditional specification in multivariate imputation. \emph{Journal of
+#' statistical computation and simulation, 76}(12), pp.1049-1064.
+#' \href{https://dx.doi.org/10.1080/10629360600810434}{
+#'   doi.10.1080/10629360600810434
+#' }
+#'
+#' Wright, M. N. and Ziegler, A., 2017. ranger: A fast implementation of random
+#' forests for high dimensional data in C++ and R. \emph{Journal of Statistical
+#' Software, 77}(i01), pp. 1-17.
+#' \href{https://dx.doi.org/10.18637/jss.v077.i01}{
+#'   doi.10.18637/jss.v077.i01
+#' }
+#'
+#' @author Stephen Wade \email{stephematician@@gmail.com}
+#'
+#' @importFrom stats setNames cor predict
+#' @importFrom utils combn
+#' @import rlang
+#'
+#' @docType package
+#' @name smirf-package
+NULL
+

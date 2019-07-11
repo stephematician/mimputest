@@ -8,7 +8,7 @@
 #' higher entropy than the initial state which would be given by that of
 #' missForest (Stekhoven, 2012).
 #'
-#' @inheritParams miForang
+#' @inheritParams smirf
 #' @param indicator named list;
 #'            indicator of missing (\code{=T}) and not-missing (\code{=F})
 #'            status for each column in \code{X}.
@@ -16,7 +16,7 @@
 #'             column being replaced by a random (with replacement) sample of
 #'             the complete cases.
 #'
-#' @seealso \code{\link{miForang}} \code{\link[missForest]{missForest}}
+#' @seealso \code{\link{smirf}} \code{\link[missForest]{missForest}}
 #'
 #' @references
 #'
@@ -32,29 +32,29 @@
 #'
 #' @examples
 #' \dontrun{
-#' # simply pass to miForang
-#' miForang(iris, X.init.fn=sample_impute)
+#' # simply pass to smirf
+#' smirf(iris, X.init.fn=sample_impute)
 #' }
 #' sample_impute(data.frame(x=c(0,1,NA)))
 #' @export
 sample_impute <- function(X, indicator=lapply(X, is.na)) {
 
-    n_ <- lapply(indicator, sum)
-    indices <- mapply(`[`,
-                      lapply(indicator, function(x) which(!x)),
-                      mapply(sample.int,
-                             n=mapply(`-`, lapply(indicator, length), n_),
-                             size=n_,
-                             MoreArgs=list(replace=T),
-                             SIMPLIFY=F),
+    indices <- mapply(sample,
+                      x=lapply(indicator, function(x) which(!x)),
+                      size=lapply(indicator, sum),
+                      MoreArgs=list(replace=T),
                       SIMPLIFY=F)
 
+    # `[<-.data.frame` messes with order of attributes
+    attr_X_ <- attributes(X)
     X[] <- mapply(`[<-`,
                   X,
                   indicator,
                   value=mapply(`[`, X, indices, SIMPLIFY=F),
                   SIMPLIFY=F)
+
+    attributes(X) <- attr_X_
     X
- 
+
 }
 

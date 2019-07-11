@@ -16,7 +16,7 @@
 #'
 #' Numeric data is treated as continuous and predicted by regression forests
 #' while factors are predicted via classification forests. When called from
-#' \code{miForang} only numeric (non-integer) and factor and ordered data are
+#' \code{smirf} only numeric (non-integer) and factor and ordered data are
 #' present (integer and logical types having been converted to factors).
 #'
 #' The key modifications to the procedure governed by the arguments \describe{
@@ -43,7 +43,7 @@
 #' \code{\link{stop_condition}}). The original Stekhoven and Buehlmann (2012)
 #' measure is provided by the \code{\link{measure_stekhoven_2012}} function.
 #'
-#' @inheritParams miForang
+#' @inheritParams smirf
 #' @param X_init data.frame;
 #'            a data set including any of numeric, logical, integer, factor and
 #'            ordered data types, to be used as the initial state of the

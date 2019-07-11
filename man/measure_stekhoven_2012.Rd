@@ -65,8 +65,8 @@ difference in the completed data.
 }
 \examples{
 \dontrun{
-# simply pass to miForang
-miForang(iris, stop.measure=measure_stekhoven_2012)
+# simply pass to smirf
+smirf(iris, stop.measure=measure_stekhoven_2012)
 }
 }
 \references{
@@ -76,6 +76,6 @@ value imputation for mixed-type data. \emph{Bioinformatics, 28}(1), pp.
 \href{https://dx.doi.org/10.1093/bioinformatics/btr597}{doi.1.1093/bioinformatics/btr597}
 }
 \seealso{
-\code{\link{measure_correlation}} \code{\link{miForang}} 
+\code{\link{measure_correlation}} \code{\link{smirf}} 
          \code{\link{stationary_rate}}
 }

@@ -1,4 +1,4 @@
-# Check conditions on X argument in call to miForang
+# Check conditions on X argument in call to smirf
 is_valid_data <- function(X, msgs=list()) {
 
     unsupported_type <- names(X)[

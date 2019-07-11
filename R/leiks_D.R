@@ -15,12 +15,12 @@
 #'
 #' @section To-do:
 #' \itemize{
-#'   \item document \code{entropy}.
-#'   \item write tests for \code{entropy}.
+#'   \item document \code{leiks_D}.
+#'   \item write tests for \code{leiks_D}.
 #' }
 #'
 #' @keywords internal
 leiks_D <- function(x, freq=table(as.ordered(x)), cdf=cumsum(freq) / sum(freq))
-    -2 * sum((cdf < 0.5) * cdf + (1 - 2 * cdf) * (cdf >= 0.5)) /
+    2 * sum(cdf + (1 - 2 * cdf) * as.numeric(cdf >= 0.5)) /
         (length(freq) - 1)
 

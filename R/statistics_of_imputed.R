@@ -13,33 +13,25 @@
 #' @keywords internal
 statistics_of_imputed <- function(imputed) {
 
-    variable_names_ <- setNames(mapply(list,
-                                       variable=names(imputed),
-                                       SIMPLIFY=F),
-                                nm=names(imputed))
-
-    # Aggregation helper - note 
-    aggregate_of_imputed <- function(to_use, aggregate_imputed)
+    aggregate_of_imputed <- function(to_use, aggregator)
         do.call(rbind,
-                mapply(function(name, x)
-                           data.frame(name,
-                                      measure=aggregate_imputed,
-                                      value=eval(sym(aggregate_imputed))(x)),
-                       unname(variable_names_[to_use]),
-                       imputed[to_use],
-                       SIMPLIFY=F))
+                mapply(data.frame,
+                       variable=to_use,
+                       value=lapply(imputed[to_use], eval(sym(aggregator))),
+                       MoreArgs=list(measure=aggregator),
+                       SIMPLIFY=F, USE.NAMES=F))
 
-    categorical_data <- names(imputed)[!sapply(imputed, is.numeric) |
-                                           !!sapply(imputed, is.integer)]
-    ordered_data <- names(imputed)[!!sapply(imputed, is.ordered) | 
-                                       !!sapply(imputed, is.integer)]
-    continuous_data <- names(imputed)[!!sapply(imputed, is.numeric) &
-                                          !sapply(imputed, is.integer)]
+    cat_data <- names(imputed)[!sapply(imputed, is.numeric) |
+                                   !!sapply(imputed, is.integer)]
+    ord_data <- names(imputed)[!!sapply(imputed, is.ordered) | 
+                                   !!sapply(imputed, is.integer)]
+    cts_data <- names(imputed)[!!sapply(imputed, is.numeric) &
+                                   !sapply(imputed, is.integer)]
 
-    rbind(aggregate_of_imputed(categorical_data, 'entropy'),
-          aggregate_of_imputed(ordered_data, 'leiks_D'),
-          aggregate_of_imputed(continuous_data, 'var'),
-          aggregate_of_imputed(continuous_data, 'mean'))
+    rbind(aggregate_of_imputed(cat_data, 'entropy'),
+          aggregate_of_imputed(ord_data, 'leiks_D'),
+          aggregate_of_imputed(cts_data, 'var'),
+          aggregate_of_imputed(cts_data, 'mean'))
 
 }
 

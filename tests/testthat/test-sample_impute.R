@@ -1,5 +1,3 @@
-library(miForang)
-
 context('sample_impute')
 
 test_that('empty data.frames', {

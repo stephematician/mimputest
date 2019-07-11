@@ -9,12 +9,12 @@ complete_results(X, mf, k = length(mf$results),
 }
 \arguments{
 \item{X}{data.frame;
-incomplete data set passed to \code{\link{miForang}} in construction of
+incomplete data set passed to \code{\link{smirf}} in construction of
 \code{mf}.}
 
 \item{mf}{list;
 imputed data sets and output of missForest procedure as returned by
-\code{\link{miForang}}.}
+\code{\link{smirf}}.}
 
 \item{k}{integer;
 number of completed data sets to generate, default is the number of
@@ -45,7 +45,7 @@ data.frame;
 }
 \description{
 Completed (imputed) data sets given incomplete data passed to
-\code{\link{miForang}} and the output thereof, returned in a long-format
+\code{\link{smirf}} and the output thereof, returned in a long-format
 data.frame.
 }
 \details{
@@ -60,5 +60,5 @@ Description
 }
 
 \seealso{
-\code{\link{miForang}}
+\code{\link{smirf}}
 }

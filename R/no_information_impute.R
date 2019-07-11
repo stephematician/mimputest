@@ -9,7 +9,7 @@
 #' tied most frequent values in a (factor) column, a single value is selected
 #' at random from the tied values.
 #'
-#' @inheritParams miForang
+#' @inheritParams smirf
 #' @param indicator named list;
 #'            indicator of missing (\code{=T}) and not-missing (\code{=F})
 #'            status for each column in \code{X}.
@@ -21,7 +21,7 @@
 #'                       is a factor.
 #'             }
 #'
-#' @seealso \code{\link{miForang}} \code{\link[missForest]{missForest}}
+#' @seealso \code{\link{smirf}} \code{\link[missForest]{missForest}}
 #'
 #' @references
 #'
@@ -32,44 +32,42 @@
 #'
 #' @examples
 #' \dontrun{
-#' # simply pass to miForang
-#' miForang(iris, X.init.fn=no_information_impute)
+#' # simply pass to smirf
+#' smirf(iris, X.init.fn=no_information_impute)
 #' }
 #' no_information_impute(data.frame(x=c(0,1,NA)))
 #' @export
 no_information_impute <- function(X, indicator=lapply(X, is.na)) {
 
     # treat integer values as  factors. used !! to convert empty lists
-    continuous_data <- names(X)[!!sapply(X, is.numeric) &
+    cts_data <- names(X)[!!sapply(X, is.numeric) &
                                     !sapply(X, is.integer)]
-    categorical_data <- setdiff(names(X), continuous_data)
+    cat_data <- setdiff(names(X), cts_data)
 
-    if (length(continuous_data) > 0)
-        X[continuous_data] <- mapply(`[<-`, 
-                                     X[continuous_data],
-                                     indicator[continuous_data],
-                                     value=colMeans(X[continuous_data],
-                                                    na.rm=T),
-                                     SIMPLIFY=F)
-
+    # `[<-.data.frame` messes with order of attributes
+    attr_X_ <- attributes(X)
+    if (length(cts_data) > 0)
+        X[cts_data] <- mapply(`[<-`, 
+                              X[cts_data],
+                              indicator[cts_data],
+                              value=colMeans(X[cts_data], na.rm=T),
+                              SIMPLIFY=F)
     # Original missForest selects a single value (at random) from the
     # most frequently observed values and assigns it to ever missing case.
-    if (length(categorical_data) > 0)
-        X[categorical_data] <- mapply(
-                                   `[<-`,
-                                   X[categorical_data],
-                                   indicator[categorical_data],
-                                   value=lapply(find_most_frequent_values(
-                                                    X[categorical_data]
-                                                ),
-                                                function(x)
-                                                    if (length(x) > 1) {
-                                                        sample(x, 1)
-                                                    } else
-                                                        x[length(x)]),
-                                   SIMPLIFY=F
-                               )
-
+    if (length(cat_data) > 0)
+        X[cat_data] <- mapply(
+                           `[<-`,
+                           X[cat_data],
+                           indicator[cat_data],
+                           value=lapply(find_most_frequent_values(X[cat_data]),
+                                        function(x)
+                                            if (length(x) > 1) {
+                                                sample(x, 1)
+                                            } else
+                                                x[length(x)]),
+                           SIMPLIFY=F
+                       )
+    attributes(X) <- attr_X_
     X
 
 }

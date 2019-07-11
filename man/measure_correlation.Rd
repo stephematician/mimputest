@@ -67,11 +67,11 @@ argument passed on to \code{\link[stats]{cor}}.
 }
 \examples{
 \dontrun{
-# simply pass to miForang
-miForang(iris, stop.measure=measure_correlation)
+# simply pass to smirf 
+smirf(iris, stop.measure=measure_correlation)
 }
 }
 \seealso{
-\code{\link[stats]{cor}} \code{\link{miForang}}
+\code{\link[stats]{cor}} \code{\link{smirf}}
          \code{\link{stationary_rate}}
 }

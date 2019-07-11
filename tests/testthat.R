@@ -1,6 +1,6 @@
 library(testthat)
-library(miForang)
+library(smirf)
 requireNamespace('tibble', quietly = TRUE)
 requireNamespace('ranger', quietly = TRUE)
 
-test_check('miForang')
+test_check('smirf')

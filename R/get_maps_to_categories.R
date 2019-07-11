@@ -7,7 +7,7 @@
 #' vector, with names given by the unique factor levels, and values given by the
 #' unique values of the corresponding column.
 #'
-#' @inheritParams miForang
+#' @inheritParams smirf
 #' @return named list;
 #'            names are given by the column names of \code{X} which have logical
 #'            or integer data, and each item is either a named logical or named

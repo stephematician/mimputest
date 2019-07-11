@@ -124,7 +124,7 @@ previous iteration.
 
 Numeric data is treated as continuous and predicted by regression forests
 while factors are predicted via classification forests. When called from
-\code{miForang} only numeric (non-integer) and factor and ordered data are
+\code{smirf} only numeric (non-integer) and factor and ordered data are
 present (integer and logical types having been converted to factors).
 
 The key modifications to the procedure governed by the arguments \describe{

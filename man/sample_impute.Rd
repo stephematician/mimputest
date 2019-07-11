@@ -32,8 +32,8 @@ missForest (Stekhoven, 2012).
 }
 \examples{
 \dontrun{
-# simply pass to miForang
-miForang(iris, X.init.fn=sample_impute)
+# simply pass to smirf
+smirf(iris, X.init.fn=sample_impute)
 }
 sample_impute(data.frame(x=c(0,1,NA)))
 }
@@ -49,5 +49,5 @@ Imputation by Chained Equations in R. _Journal of Statistical Software,
 \href{https://dx.doi.org/10.18637/jss.v045.i03}{doi.10.18637/jss.v045.i03}
 }
 \seealso{
-\code{\link{miForang}} \code{\link[missForest]{missForest}}
+\code{\link{smirf}} \code{\link[missForest]{missForest}}
 }

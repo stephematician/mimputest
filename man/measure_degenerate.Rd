@@ -40,10 +40,10 @@ continue if the limit of the number of iterations has been reached, or not.
 }
 \examples{
 \dontrun{
-# simply pass to miForang
-miForang(iris, stop.measure=measure_degenerate)
+# simply pass to smirf
+smirf(iris, stop.measure=measure_degenerate)
 }
 }
 \seealso{
-\code{\link{miForang}}
+\code{\link{smirf}}
 }

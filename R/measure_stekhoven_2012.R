@@ -50,40 +50,40 @@
 #' 112-118.
 #' \href{https://dx.doi.org/10.1093/bioinformatics/btr597}{doi.1.1093/bioinformatics/btr597}
 #'
-#' @seealso \code{\link{measure_correlation}} \code{\link{miForang}} 
+#' @seealso \code{\link{measure_correlation}} \code{\link{smirf}} 
 #'          \code{\link{stationary_rate}}
 #'
 #' @examples
 #' \dontrun{
-#' # simply pass to miForang
-#' miForang(iris, stop.measure=measure_stekhoven_2012)
+#' # simply pass to smirf
+#' smirf(iris, stop.measure=measure_stekhoven_2012)
 #' }
 #' @export
 measure_stekhoven_2012 <- function(X, Y, X_init, indicator) {
 
     continuous <- categorical <- NULL
 
-    continuous_data <- names(X)[!sapply(X, is.factor)]
+    cts_data <- names(X)[!sapply(X, is.factor)]
 
     # includes ordered data
-    categorical_data <- setdiff(names(X), continuous_data)
+    cat_data <- setdiff(names(X), cts_data)
 
     # reversed sign here due to form of stop_condition()
-    if (length(continuous_data) > 0)
+    if (length(cts_data) > 0)
         continuous <- -sum(mapply(function(x, y) sum((x - y)^2),
-                                  X[continuous_data],
-                                  Y[continuous_data])) /
+                                  X[cts_data],
+                                  Y[cts_data])) /
                            sum(mapply(function(x, d, indicator)
                                           sum(c(x, d[!indicator])^2),
-                                      Y[continuous_data],
-                                      X_init[continuous_data],
-                                      indicator[continuous_data]))
+                                      Y[cts_data],
+                                      X_init[cts_data],
+                                      indicator[cts_data]))
 
-    if (length(categorical_data) > 0)
-        categorical <- stationary_rate(X[categorical_data],
-                                       Y[categorical_data],
-                                       X_init[categorical_data],
-                                       indicator[categorical_data])
+    if (length(cat_data) > 0)
+        categorical <- stationary_rate(X[cat_data],
+                                       Y[cat_data],
+                                       X_init[cat_data],
+                                       indicator[cat_data])
 
     c(categorical=categorical, continuous=continuous)
 

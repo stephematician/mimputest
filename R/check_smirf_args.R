@@ -1,15 +1,15 @@
-# Check arguments in call to miForang
-check_miForang_args <- function(           X,          n, order.impute,
-                                       gibbs,   tree.imp,   boot.train,
-                                    obs.only,    verbose,    X.init.fn,
-                                stop.measure, loop.limit,    overrides,
-                                  clean.step) {
-
-    check_miForang_arg_types(           X,          n, order.impute,
+# Check arguments in call to smirf
+check_smirf_args <- function(           X,          n, order.impute,
                                     gibbs,   tree.imp,   boot.train,
                                  obs.only,    verbose,    X.init.fn,
                              stop.measure, loop.limit,    overrides,
-                               clean.step)
+                               clean.step) {
+
+    check_smirf_arg_types(           X,          n, order.impute,
+                                 gibbs,   tree.imp,   boot.train,
+                              obs.only,    verbose,    X.init.fn,
+                          stop.measure, loop.limit,    overrides,
+                            clean.step)
 
     msgs <- is_valid_data(X)
 

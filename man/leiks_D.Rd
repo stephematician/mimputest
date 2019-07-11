@@ -28,8 +28,8 @@ category (provided in order)
 \section{To-do}{
 
 \itemize{
-  \item document \code{entropy}.
-  \item write tests for \code{entropy}.
+  \item document \code{leiks_D}.
+  \item write tests for \code{leiks_D}.
 }
 }
 

@@ -19,17 +19,20 @@
 #'             zero when the limit on number of iterations has been reached,
 #'             otherwise the current iteration.
 #'
-#' @seealso \code{\link{miForang}}
+#' @seealso \code{\link{smirf}}
 #'
 #' @examples
 #' \dontrun{
-#' # simply pass to miForang
-#' miForang(iris, stop.measure=measure_degenerate)
+#' # simply pass to smirf
+#' smirf(iris, stop.measure=measure_degenerate)
 #' }
 #' @export
 measure_degenerate <- function(X, Y, X_init, indicator, env=parent.frame()) {
 
-    c(measure=as.numeric(eval(expression(j * (j < loop.limit)), envir=env)))
+    if (eval(expression(loop.limit < 2L), envir=env)) {
+        NULL
+    } else 
+        c(measure=eval(expression(j * (j < loop.limit)), envir=env))
 
 }
 

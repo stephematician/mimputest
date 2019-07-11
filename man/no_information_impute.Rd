@@ -37,8 +37,8 @@ at random from the tied values.
 }
 \examples{
 \dontrun{
-# simply pass to miForang
-miForang(iris, X.init.fn=no_information_impute)
+# simply pass to smirf
+smirf(iris, X.init.fn=no_information_impute)
 }
 no_information_impute(data.frame(x=c(0,1,NA)))
 }
@@ -49,5 +49,5 @@ pp. 112-118.
 \href{https://dx.doi.org/10.1093/bioinformatics/btr597}{doi.1.1093/bioinformatics/btr597}
 }
 \seealso{
-\code{\link{miForang}} \code{\link[missForest]{missForest}}
+\code{\link{smirf}} \code{\link[missForest]{missForest}}
 }
