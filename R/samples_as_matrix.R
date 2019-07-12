@@ -29,9 +29,13 @@
 #' @seealso \code{\link{utils}{combn}} \code{\link{base}{sample.int}}
 #'
 #' @keywords internal
-samples_as_matrix <- function(n, k=n, size=0, replace=F)
+samples_as_matrix <- function(n, k=n, size=0, replace=F) {
 
-    if (!replace) {
+    stopifnot(n >= 1 & k >= 1)
+    stopifnot(k <= n)
+    stopifnot(round(k) == k & round(n) == n)
+
+    if (!replace & round(k) > 1) {
         if (size >= 2 * choose(n, k)) {
             # subset all combinations
             t(combn(x=n, m=k))[
@@ -39,9 +43,12 @@ samples_as_matrix <- function(n, k=n, size=0, replace=F)
             ]
         } else {
             # loop is probably faster
-            t(sapply(rep_len(n, size), sample.int, size=k, replace=F))
+            matrix(sapply(rep_len(n, size), sample.int, size=k, replace=F),
+                   byrow=T,
+                   nrow=size)
         }
     } else {
         matrix(sample.int(n, replace=T, size=size * k), nrow=size)
     }
 
+}
