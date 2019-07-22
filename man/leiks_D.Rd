@@ -4,12 +4,15 @@
 \alias{leiks_D}
 \title{Calculate Leik's D of ordered data}
 \usage{
-leiks_D(x, freq = table(as.ordered(x)), cdf = cumsum(freq)/sum(freq))
+leiks_D(x)
 }
 \arguments{
 \item{x}{ordered;
-observed ordered data or data that can be coerced into ordered
-via as.ordered.}
+ordered data or data that can be coerced into ordered via
+\code{\link{as.factor}} and \code{\link{factor}} with 
+\code{ordered=T}.}
+
+\item{f_x;}{data as a factor (or ordered factor).}
 
 \item{freq}{numeric;
 count of observations in each category in order.}
@@ -25,12 +28,15 @@ numeric;
 Calculate Leiks' D of ordered data using tally of observations in each
 category (provided in order)
 }
-\section{To-do}{
-
-\itemize{
-  \item document \code{leiks_D}.
-  \item write tests for \code{leiks_D}.
+\details{
+Calculates the dispersion via the Leik's D statistic for ordinal data using
+a tally of observations in each category and the following formula; \deqn{
+   D = \frac{2}{n - 1} \left(
+           \sum_{j : F_j < 0.5} F_j + \sum_{j : F_j \geq 0.5} 1 - F_j
+       \right)
 }
+where \eqn{n} is the number of categories, and \eqn{F_k} is the cumulative
+distribution for category indexed by \eqn{k}, except in the case of one
+category, where the value 0 is returned.
 }
-
 \keyword{internal}

@@ -1,15 +1,16 @@
 Package: smirf
-Title: Single or multiple imputation of missing data by random forests
+Title: Single or multiple imputation of missing data using random forests
 Version: 0.0.0.9000
 Authors@R:
     person("Stephen",
            "Wade",
            email = "stephematician@gmail.com",
            role = c("aut", "cre"))
-Description: Performs imputation using the missForest algorithm by Stekhoven et
-    al. Single and (experimental) multiple imputation provided. Variations on
-    the training and prediction steps are available to monitor convergence and
-    improve variance of missing data distribution.
+Description: Performs single or multiple imputation of missing data using the
+    missForest algorithm by Stekhoven et al. Variations on the training and
+    prediction steps are available to monitor convergence and improve variance
+    of missing data distribution, or to mimic Multiple Imputation by Chained
+    Equations (known as MICE) using random forests.
 Depends:
     R (>= 3.3.0)
 License: MIT + file LICENSE

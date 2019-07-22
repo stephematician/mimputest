@@ -1,23 +1,23 @@
 #' Single of multiple imputation of missing data using random forests
 #'
 #' Missing data (multiple) imputation using the missForest algorithm by
-#' Stekhoven and Buehlmann (2012). The ranger (Wright and Ziegler, 2017) fast
-#' implementation of random forest (training) algorithm is used. Some
-#' key alterations to the missForest algorithm may be specified by the user.
+#' Stekhoven and Buehlmann (2012) (default) or, alternatively, the MICE with
+#' random forest procedure of Doove et al (2014). The ranger (Wright and
+#' Ziegler, 2017) fast implementation of random forest (training) algorithm is
+#' used.
 #'
 #' For a full description of the missForest algorithm, see Stekhoven and
 #' Buehlmann (2012). In brief, at each iteration missing values are imputed for
-#' each variable (in the order of \code{order.impute}) by the predictions of a
-#' random forest trained on the observed cases of that variable along with the
-#' completed data set of the previous iteration as the value of the predictors.
-#' This is repeated until some measure of the relationship between iterations
-#' indicates convergence - usually by decreasing from the measure at the
-#' previous iteration.
+#' each variable by the predictions of a random forest trained on the observed
+#' cases of that variable using the values of predictors from the completed data
+#' set from the previous iteration. This is repeated until some measure of the
+#' relationship between iterations indicates convergence - usually by decreasing
+#' from the measure at the previous iteration.
 #'
 #' By default the columns are imputed in the order of least missing to most
-#' missing. This can be over-ridden by the \code{order.impute} argument. Columns
-#' that are entirely missing are excluded. Non-integer numeric data is treated
-#' as continuous and predicted by regression forests while all other data,
+#' missing. This can be over-ridden by the \code{model} argument. Columns that
+#' are entirely missing are excluded. Non-integer numeric data is treated as
+#' continuous and predicted by regression forests while all other data,
 #' including integer and logical data, are predicted via classification forests.
 #' No special treatment is given to ordered categorical data.
 #'
@@ -39,12 +39,12 @@
 #'         observed only by setting this to \code{F} (default is \code{T}).}
 #' }
 #'
-#' Using the first two changes make the procedure similar to the Multiple
-#' Imputation via Chained Equations of Doove et al (2014). Experimentally,
-#' adding the final modification makes the procedure mimic van Buuren and
-#' Groothuis-Oudshoorn, (2012), however it does not seem advisable to train a
-#' random forest on predicted data. The third item follows the suggestion of
-#' Bartlett (2014) to improve CI coverage.
+#' Switching the first two to \code{T} invokes a similar procedure to Multiple
+#' Imputation via Chained Equations of Doove et al (2014). The third option
+#' can be used to improve CI coverage (Bartlett 2014). The final option (along
+#' with changes to the first two) will mimic van Buuren and
+#' Groothuis-Oudshoorn, (2012), except for a difference in the draw from leaf
+#' nodes.
 #'
 #' The convergence criterion can be modified by the \code{stop.measure}
 #' argument. The default is to measure the mean rank correlation between
@@ -57,12 +57,16 @@
 #' @param X data.frame;
 #'            a incomplete data set including any of numeric, logical, integer,
 #'            factor and ordered data types.
+#' @param model matrix;
+#'            logical matrix which indicates inclusion of a predictor (named 
+#'            column) in the model of an imputed value (named row), with the
+#'            order of imputation being the row order, default is a matrix of
+#'            ones with rows for each partially but not-completely missing
+#'            variable (in order of least to most missing), and columns
+#'            for every partially complete variable.
 #' @param n numeric scalar;
 #'            the number of imputations - i.e. number of times the missForest
 #'            algorithm is used.
-#' @param order.impute character vector;
-#'            (optional) order to impute columns - default value given by
-#'            increasing rate of missing data in \code{X}.
 #' @param gibbs logical;
 #'            use Gibbs sampling in training steps (\code{T}) rather than the
 #'            predictions from the previous iteration (default).
@@ -141,6 +145,7 @@
 #'                         \item{\code{stop_measures}}{output of the call to
 #'                             \code{stop.measure} at each iteration;}
 #'                     }
+#'                 }
 #'                 \item{which_imputed}{named list of which rows the imputed
 #'                     named data belong to.}
 #'             }
@@ -184,14 +189,12 @@
 #'          \code{\link{stop_condition}}
 #'          \code{\link{no_information_impute}} \code{\link{sample_impute}}
 #'          \code{\link[missForest]{missForest}}
-#'          \code{\link[ranger]{ranger}} 
+#'          \code{\link[ranger]{ranger}}
 #'
 #' @export
 smirf <- function(X,
+                  model=NULL,
                   n=5L,
-                  order.impute=NULL,
-                  #to.impute=NULL,
-                  #to.use=NULL,
                   gibbs=F,
                   tree.imp=F,
                   boot.train=F,
@@ -208,10 +211,9 @@ smirf <- function(X,
 
     when_verbose_print <- function(...) if (verbose) print(...)
 
-    check_smirf_args(         X,            n, order.impute,     gibbs,
-                       tree.imp,   boot.train,     obs.only,   verbose,
-                      X.init.fn, stop.measure,   loop.limit, overrides,
-                     clean.step)
+    check_smirf_args(         X,     model,          n,     gibbs,     tree.imp,
+                     boot.train,  obs.only,    verbose, X.init.fn, stop.measure,
+                     loop.limit, overrides, clean.step)
 
     n_obs <- nrow(X)
 
@@ -228,22 +230,22 @@ smirf <- function(X,
     indicator <- lapply(X, is.na)
 
     # filter completely missing variables
-    missing_tally <- sapply(indicator, sum)
-    if (any(missing_tally == n_obs))
+    miss_tally <- sapply(indicator, sum)
+    if (any(miss_tally == n_obs))
         warning(paste0('excluding the following entirely missing data in X:',
                        '\n  - ',
-                       paste(names(missing_tally)[missing_tally == n_obs], 
+                       paste(names(miss_tally)[miss_tally == n_obs],
                              collapse=', '), '.'))
 
-    v_use <- names(missing_tally)[missing_tally != n_obs]
+    v_use <- names(miss_tally)[miss_tally != n_obs]
     indicator <- indicator[v_use]
-    missing_tally <- missing_tally[v_use]
+    miss_tally <- miss_tally[v_use]
 
     # sort columns by least to most missing
-    if (is.null(order.impute)) {
-        order.impute <- v_use[order(missing_tally)]
-        order.impute <- order.impute[missing_tally[order.impute] > 0]
-    }
+    if (is.null(model))
+        model <- matrix(1, nrow=sum(miss_tally > 0), ncol=length(v_use),
+                        dimnames=list(v_use[order(miss_tally)[miss_tally > 0]],
+                                      v_use))
 
     # convert integers and logical values to factors
     to_categories <- get_maps_to_categories(X[v_use])
@@ -278,10 +280,10 @@ smirf <- function(X,
                                                X_init[names(to_categories)],
                                                SIMPLIFY=F)
 
-        res[[j]] <- perform_missforest(      X_init, indicator,  ranger_call,
-                                       order.impute,     gibbs,     tree.imp,
-                                         boot.train,  obs.only, stop.measure,
-                                         loop.limit, overrides,   clean.step)
+        res[[j]] <- perform_missforest(     X_init,     model,    indicator,
+                                       ranger_call,     gibbs,     tree.imp,
+                                        boot.train,  obs.only, stop.measure,
+                                        loop.limit, overrides,   clean.step)
 
         # convert back to integer/logical
         res[[j]]$imputed <- lapply(res[[j]]$imputed,
@@ -292,6 +294,7 @@ smirf <- function(X,
     }
 
     list(call=match.call(),
+         model=model,
          results=lapply(res,
                         post_process_missforest,
                         to_categories=to_categories),

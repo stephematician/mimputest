@@ -4,7 +4,7 @@
 \alias{smirf}
 \title{Single of multiple imputation of missing data using random forests}
 \usage{
-smirf(X, n = 5L, order.impute = NULL, gibbs = F, tree.imp = F,
+smirf(X, model = NULL, n = 5L, gibbs = F, tree.imp = F,
   boot.train = F, obs.only = T, verbose = F,
   X.init.fn = no_information_impute,
   stop.measure = measure_correlation, loop.limit = 10L,
@@ -15,13 +15,17 @@ smirf(X, n = 5L, order.impute = NULL, gibbs = F, tree.imp = F,
 a incomplete data set including any of numeric, logical, integer,
 factor and ordered data types.}
 
+\item{model}{matrix;
+logical matrix which indicates inclusion of a predictor (named 
+column) in the model of an imputed value (named row), with the
+order of imputation being the row order, default is a matrix of
+ones with rows for each partially but not-completely missing
+variable (in order of least to most missing), and columns
+for every partially complete variable.}
+
 \item{n}{numeric scalar;
 the number of imputations - i.e. number of times the missForest
 algorithm is used.}
-
-\item{order.impute}{character vector;
-(optional) order to impute columns - default value given by
-increasing rate of missing data in \code{X}.}
 
 \item{gibbs}{logical;
 use Gibbs sampling in training steps (\code{T}) rather than the
@@ -95,26 +99,49 @@ type as the second argument.}
 \code{\link[ranger]{ranger}}, e.g. \code{num.trees} for the number
 of trees in each forest.}
 }
+\value{
+list;
+            containing the following items; \describe{
+                \item{call}{the call used to create the multiply imputed
+                    data sets;}
+                \item{results}{list where each item (numbered) is itself a
+                    named list of the output for an imputed data set;
+                    \describe{
+                        \item{\code{converged}}{boolean convergence status;}
+                        \item{\code{imputed}}{list of imputed data by
+                            iteration and variable;}
+                        \item{\code{iterations}}{numeric count of iterations
+                            before stopping criteria met;}
+                        \item{\code{oob_error}}{list of oob error by
+                            iteration and variable;}
+                        \item{\code{stop_measures}}{output of the call to
+                            \code{stop.measure} at each iteration;}
+                    }
+                }
+                \item{which_imputed}{named list of which rows the imputed
+                    named data belong to.}
+            }
+}
 \description{
 Missing data (multiple) imputation using the missForest algorithm by
-Stekhoven and Buehlmann (2012). The ranger (Wright and Ziegler, 2017) fast
-implementation of random forest (training) algorithm is used. Some
-key alterations to the missForest algorithm may be specified by the user.
+Stekhoven and Buehlmann (2012) (default) or, alternatively, the MICE with
+random forest procedure of Doove et al (2014). The ranger (Wright and
+Ziegler, 2017) fast implementation of random forest (training) algorithm is
+used.
 }
 \details{
 For a full description of the missForest algorithm, see Stekhoven and
 Buehlmann (2012). In brief, at each iteration missing values are imputed for
-each variable (in the order of \code{order.impute}) by the predictions of a
-random forest trained on the observed cases of that variable along with the
-completed data set of the previous iteration as the value of the predictors.
-This is repeated until some measure of the relationship between iterations
-indicates convergence - usually by decreasing from the measure at the
-previous iteration.
+each variable by the predictions of a random forest trained on the observed
+cases of that variable using the values of predictors from the completed data
+set from the previous iteration. This is repeated until some measure of the
+relationship between iterations indicates convergence - usually by decreasing
+from the measure at the previous iteration.
 
 By default the columns are imputed in the order of least missing to most
-missing. This can be over-ridden by the \code{order.impute} argument. Columns
-that are entirely missing are excluded. Non-integer numeric data is treated
-as continuous and predicted by regression forests while all other data,
+missing. This can be over-ridden by the \code{model} argument. Columns that
+are entirely missing are excluded. Non-integer numeric data is treated as
+continuous and predicted by regression forests while all other data,
 including integer and logical data, are predicted via classification forests.
 No special treatment is given to ordered categorical data.
 
@@ -136,12 +163,12 @@ The key modifications to the missForest procedure governed by the arguments
         observed only by setting this to \code{F} (default is \code{T}).}
 }
 
-Using the first two changes make the procedure similar to the Multiple
-Imputation via Chained Equations of Doove et al (2014). Experimentally,
-adding the final modification makes the procedure mimic van Buuren and
-Groothuis-Oudshoorn, (2012), however it does not seem advisable to train a
-random forest on predicted data. The third item follows the suggestion of
-Bartlett (2014) to improve CI coverage.
+Switching the first two to \code{T} invokes a similar procedure to Multiple
+Imputation via Chained Equations of Doove et al (2014). The third option
+can be used to improve CI coverage (Bartlett 2014). The final option (along
+with changes to the first two) will mimic van Buuren and
+Groothuis-Oudshoorn, (2012), except for a difference in the draw from leaf
+nodes.
 
 The convergence criterion can be modified by the \code{stop.measure}
 argument. The default is to measure the mean rank correlation between

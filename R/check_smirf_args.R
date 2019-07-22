@@ -1,17 +1,18 @@
 # Check arguments in call to smirf
-check_smirf_args <- function(           X,          n, order.impute,
-                                    gibbs,   tree.imp,   boot.train,
-                                 obs.only,    verbose,    X.init.fn,
-                             stop.measure, loop.limit,    overrides,
-                               clean.step) {
+check_smirf_args <- function(         X,        model,          n,     gibbs,
+                               tree.imp,   boot.train,   obs.only,   verbose,
+                              X.init.fn, stop.measure, loop.limit, overrides,
+                             clean.step) {
 
-    check_smirf_arg_types(           X,          n, order.impute,
-                                 gibbs,   tree.imp,   boot.train,
-                              obs.only,    verbose,    X.init.fn,
-                          stop.measure, loop.limit,    overrides,
-                            clean.step)
+    check_smirf_arg_types(         X,        model,          n,     gibbs,
+                            tree.imp,   boot.train,   obs.only,   verbose,
+                           X.init.fn, stop.measure, loop.limit, overrides,
+                          clean.step)
 
     msgs <- is_valid_data(X)
+
+    if (!is.null(model))
+        msgs <- is_valid_model(X, model, msgs)
 
     if (length(n) != 1)
         msgs <- c(msgs, 'n is not a scalar value.')
@@ -33,9 +34,6 @@ check_smirf_args <- function(           X,          n, order.impute,
 
     if (length(verbose) != 1)
         msgs <- c(msgs, 'verbose is not a scalar value')
-
-    if (!is.null(order.impute))
-        msgs <- is_valid_order_impute(X, order.impute, msgs)
 
     msgs <- is_valid_X_init_fn(X.init.fn, msgs)
 

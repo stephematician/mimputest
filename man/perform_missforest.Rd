@@ -4,8 +4,8 @@
 \alias{perform_missforest}
 \title{Perform missForest iteration}
 \usage{
-perform_missforest(X_init, indicator, ranger_call, order.impute,
-  gibbs = F, tree.imp = F, boot.train = F, obs.only = T,
+perform_missforest(X_init, model, indicator, ranger_call, gibbs = F,
+  tree.imp = F, boot.train = F, obs.only = T,
   stop.measure = measure_correlation, loop.limit = 10L,
   overrides = list(), clean.step = list())
 }
@@ -15,6 +15,14 @@ a data set including any of numeric, logical, integer, factor and
 ordered data types, to be used as the initial state of the
 missForest procedure.}
 
+\item{model}{matrix;
+logical matrix which indicates inclusion of a predictor (named 
+column) in the model of an imputed value (named row), with the
+order of imputation being the row order, default is a matrix of
+ones with rows for each partially but not-completely missing
+variable (in order of least to most missing), and columns
+for every partially complete variable.}
+
 \item{indicator}{named list;
 an indicator of the missing (\code{=T}) or not-missing (\code{=F})
 status of the columns of \code{X_init}.}
@@ -23,10 +31,6 @@ status of the columns of \code{X_init}.}
 skeleton call to \code{\link[ranger]{ranger}} for fitting random
 forests during the missForest iterative procedure, arguments can
 be over-ridden on a per-variable basis by \code{overrides}.}
-
-\item{order.impute}{character vector;
-(optional) order to impute columns - default value given by
-increasing rate of missing data in \code{X}.}
 
 \item{gibbs}{logical;
 use Gibbs sampling in training steps (\code{T}) rather than the
@@ -115,8 +119,8 @@ key alterations to the missForest algorithm may be specified by the user.
 \details{
 For a full description of the missForest algorithm, see Stekhoven and
 Buehlmann (2012). In brief, at each iteration missing values are imputed for
-each variable (in the order of \code{order.impute}) by the predictions of a
-random forest trained on the observed cases of that variable along with the
+each variable (in the order of \code{rownames(model)}) by the predictions of
+a random forest trained on the observed cases of that variable along with the
 completed data set of the previous iteration as the value of the predictors.
 This is repeated until some measure of the relationship between iterations
 indicates convergence - usually by decreasing from the measure at the

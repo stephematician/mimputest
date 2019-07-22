@@ -7,8 +7,8 @@
 #'
 #' For a full description of the missForest algorithm, see Stekhoven and
 #' Buehlmann (2012). In brief, at each iteration missing values are imputed for
-#' each variable (in the order of \code{order.impute}) by the predictions of a
-#' random forest trained on the observed cases of that variable along with the
+#' each variable (in the order of \code{rownames(model)}) by the predictions of
+#' a random forest trained on the observed cases of that variable along with the
 #' completed data set of the previous iteration as the value of the predictors.
 #' This is repeated until some measure of the relationship between iterations
 #' indicates convergence - usually by decreasing from the measure at the
@@ -103,9 +103,9 @@
 #'
 #' @keywords internal
 perform_missforest <- function(X_init,
+                               model,
                                indicator,
                                ranger_call,
-                               order.impute,
                                gibbs=F,
                                tree.imp=F,
                                boot.train=F,
@@ -116,23 +116,22 @@ perform_missforest <- function(X_init,
                                clean.step=list()) {
 
     stop_measures <- list(NULL)
-    oob_error <- data.frame(setNames(lapply(order.impute,
+    oob_error <- data.frame(setNames(lapply(rownames(model),
                                             function(x) numeric(0)),
-                                     order.impute))
+                                     rownames(model)))
     imputed <- list(mapply(subset,
-                           X_init[order.impute],
-                           indicator[order.impute],
+                           X_init[rownames(model)],
+                           indicator[rownames(model)],
                            SIMPLIFY=F))
     data_ <- X_init
     converged <- F
-    oob_measure <- factor(setNames(rep(NA, length(order.impute)),
-                                   nm=order.impute),
+    oob_measure <- factor(setNames(rep(NA, nrow(model)), nm=rownames(model)),
                           levels=c('mse', 'pfc'))
-    oob_measure[sapply(X_init[order.impute], is.factor)] <- 'pfc'
+    oob_measure[sapply(X_init[rownames(model)], is.factor)] <- 'pfc'
     oob_measure[is.na(oob_measure)] <- 'mse'
     n_train <- sapply(indicator, function(x) sum(!x | !obs.only))
 
-    if (!length(order.impute))
+    if (!nrow(model))
         return(list(converged=NULL,
                     imputed=imputed,
                     iterations=0L,
@@ -143,7 +142,7 @@ perform_missforest <- function(X_init,
 
         imputed[[j+1]] <- list()
  
-        for (v in order.impute) {
+        for (v in rownames(model)) {
 
             # TODO: might need to store this
             if (boot.train) {
@@ -151,11 +150,13 @@ perform_missforest <- function(X_init,
             } else
                 rows <- seq_len(n_train[[v]])
 
+            v_model <- names(data_) %in% c(v, colnames(model)[model[v,]])
+
             ranger_fit <- eval_tidy(
                               call_modify(
                                   ranger_call,
                                   data=data_[!indicator[[v]] | !obs.only,
-                                             T,
+                                             v_model,
                                              drop=F][rows, T, drop=F],
                                   dependent.variable.name=v,
                                   !!! overrides[[v]]
@@ -164,7 +165,7 @@ perform_missforest <- function(X_init,
 
             imputed[[j+1]][[v]] <- sample_from_ranger(ranger_fit,
                                                       data_[indicator[[v]],
-                                                            T,
+                                                            v_model,
                                                             drop=F],
                                                       v,
                                                       tree.imp)
@@ -185,7 +186,7 @@ perform_missforest <- function(X_init,
         }
 
         if (!gibbs)
-            for (v in order.impute) {
+            for (v in rownames(model)) {
                 if (is.function(clean.step[[v]]))
                     imputed[[j+1]][[v]] <- clean.step[[v]](data_[indicator[[v]],
                                                                  T,

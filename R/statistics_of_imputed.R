@@ -1,14 +1,36 @@
 #' Calculate statistics of imputed data 
 #'
-#' Calculates certain selected statistics (aggregates) of imputed data
+#' Calculates selected statistics (measures) of imputed data
 #'
-#' @param imputed named list;
-#'
-#' @section To-do:
-#' \itemize{
-#'   \item fully document \code{statistics_of_imputed}
-#'   \item write tests for \code{statistics_of_imputed}
+#' Calculates statistics or measures for each imputed variable according to its
+#' type, which is one of categorical, ordinal or continuous:
+#' \describe{
+#'   \item{categorical}{
+#'     calculate the \code{\link{entropy}} of non-numeric or integer data;
+#'   }
+#'   \item{ordinal}{
+#'     calculate the dispersion using \code{\link{leiks_D}} of ordered or
+#'     integer data;
+#'   }
+#'   \item{continuous}{
+#'     calculate the mean and variance of numeric data;
+#'   }
 #' }
+#'
+#' These statistics are intended to be used to monitor convergence of the
+#' missForest or MICE procedure.
+#'
+#' @param imputed named list; each item in the last contains the imputed values
+#'            of the named item.
+#' @return data.frame; a data.frame with three columns;
+#'             \describe{
+#'                 \item{\code{variable}}{name of the imputed data as a factor;}
+#'                 \item{\code{value}}{value of the measure/statistic;}
+#'                 \item{\code{measure}}{the name of the measure as a factor,
+#'                     e.g. 'entropy'.}
+#'               }
+#'
+#' @seealso entropy leiks_D
 #'
 #' @keywords internal
 statistics_of_imputed <- function(imputed) {

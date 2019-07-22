@@ -1,4 +1,4 @@
-# smirf: Missing data (multiple) imputation using a fast implementation of random forests
+# smirf: Single or multiple imputation of missing data using random forests
 
 _Stephen Wade_
 

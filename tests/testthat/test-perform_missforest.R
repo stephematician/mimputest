@@ -8,10 +8,12 @@ test_that('dry run iris', {
                         function(...)
                             sample(x=c(T,F,F), size=nrow(iris), replace=T))
     r <- perform_missforest(X_init=iris,
+                            model=matrix(T, nrow=ncol(iris), ncol=ncol(iris),
+                                         dimnames=list(names(iris),
+                                                       names(iris))),
                             indicator=indicator,
                             ranger_call=rlang::call2(ranger::ranger,
                                                      write.forest=T),
-                            order.impute=names(iris),
                             loop.limit=0)
 
     # Check presence and type of returned values
@@ -43,10 +45,12 @@ test_that('all but one in a row iris', {
                         function(nm)
                             nm == missing_column)
     r <- perform_missforest(X_init=iris,
+                            model=matrix(T, nrow=ncol(iris), ncol=ncol(iris),
+                                         dimnames=list(names(iris),
+                                                       names(iris))),
                             indicator=indicator,
                             ranger_call=rlang::call2(ranger::ranger,
                                                      write.forest=T),
-                            order.impute=names(iris),
                             loop.limit=10L)
 
     # Check presence and type of returned values

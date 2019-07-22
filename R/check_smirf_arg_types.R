@@ -1,22 +1,20 @@
 # Check argument types in call to smirf
-check_smirf_arg_types <- function(           X,          n, order.impute,
-                                         gibbs,   tree.imp,   boot.train,
-                                      obs.only,    verbose,    X.init.fn,
-                                  stop.measure, loop.limit,    overrides,
+check_smirf_arg_types <- function(           X,      model,          n,
+                                         gibbs,   tree.imp, boot.train,
+                                      obs.only,    verbose,  X.init.fn,
+                                  stop.measure, loop.limit,  overrides,
                                     clean.step) {
 
     msg_if_not <- function(condition, msgs=list())
         if (!condition)
-            c(msgs,
-              paste0('unsatisfied condition: ',
-                     quo_name(enquo(condition)),
-                     '.'))
+            paste0('unsatisfied condition: ', quo_name(enquo(condition)), '.')
 
     type_check_msg <- c(msg_if_not(is.data.frame(X)), msg_if_not(is.numeric(n)))
 
-    if (!is.null(order.impute))
+    if (!is.null(model))
         type_check_msg <- c(type_check_msg,
-                            msg_if_not(is.character(order.impute)))
+                            msg_if_not(is.logical(model)),
+                            msg_if_not(is.matrix(model)))
 
     type_check_msg <- c(type_check_msg,
                         msg_if_not(is.logical(gibbs)),
