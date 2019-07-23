@@ -77,9 +77,9 @@
 #'                     in X_init.}
 #'             }
 #'
-#' @section To-do:
-#' May want to store which data is included in the bootstrap sample when
-#' training with \code{boot.train=T}.
+#' @seealso \code{\link{measure_correlation}} \code{\link{measure_stekhoven_2012}}
+#'          \code{\link[missForest]{missForest}} \code{\link[ranger]{ranger}}
+#'          \code{\link{stop_condition}}
 #'
 #' @references
 #'
@@ -96,10 +96,6 @@
 #' Wright, M. N. and Ziegler, A., 2017. ranger: A fast implementation of random
 #' forests for high dimensional data in C++ and R. \emph{Journal of Statistical
 #' Software, 77}(i01), pp. 1-17. \href{https://dx.doi.org/10.18637/jss.v077.i01}{doi.10.18637/jss.v077.i01}
-#'
-#' @seealso \code{\link{measure_correlation}} \code{\link{measure_stekhoven_2012}}
-#'          \code{\link[missForest]{missForest}} \code{\link[ranger]{ranger}}
-#'          \code{\link{stop_condition}}
 #'
 #' @keywords internal
 perform_missforest <- function(X_init,

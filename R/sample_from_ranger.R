@@ -11,14 +11,6 @@
 #' smaller data sets, see issue 133:
 #' \url{https://github.com/imbs-hl/ranger/issues/133}
 #'
-#' @section To-do:
-#'
-#' Tree sampling procedure computes the prediction from every tree for every
-#' row of data which is wasteful but reduces the number of calls to
-#' \code{predict} and typically runs faster than calling predict with
-#' subsets of the data many times. This could be optimised in future via a
-#' a C/C++ implementation using std::threads similar to \code{ranger}.
-#'
 #' @param ranger_fit ranger object;
 #'            random forest fitted to data of same format as \code{data_}
 #'            argument.

@@ -43,15 +43,15 @@
 #'                     completed data sets (see \code{\link{stationary_rate}}).}
 #'             }
 #'
+#' @seealso \code{\link{measure_correlation}} \code{\link{smirf}} 
+#'          \code{\link{stationary_rate}}
+#'
 #' @references
 #'
 #' Stekhoven, D.J. and Buehlmann, P., 2012. MissForest--non-parametric missing
 #' value imputation for mixed-type data. \emph{Bioinformatics, 28}(1), pp.
 #' 112-118.
 #' \href{https://dx.doi.org/10.1093/bioinformatics/btr597}{doi.1.1093/bioinformatics/btr597}
-#'
-#' @seealso \code{\link{measure_correlation}} \code{\link{smirf}} 
-#'          \code{\link{stationary_rate}}
 #'
 #' @examples
 #' \dontrun{

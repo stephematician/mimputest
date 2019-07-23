@@ -27,7 +27,8 @@ an indicator of the missing (\code{=T}) or not-missing (\code{=F})
 status of the columns of \code{X_init}.}
 
 \item{env}{environment;
-environment of the calling function}
+environment of the calling function 
+\code{\link{perform_missforest}}}
 }
 \value{
 named numeric;

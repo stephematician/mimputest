@@ -155,12 +155,6 @@ these values are less than or equal to the previous values (see
 \code{\link{stop_condition}}). The original Stekhoven and Buehlmann (2012)
 measure is provided by the \code{\link{measure_stekhoven_2012}} function.
 }
-\section{To-do}{
-
-May want to store which data is included in the bootstrap sample when
-training with \code{boot.train=T}.
-}
-
 \references{
 Stekhoven, D.J. and Buehlmann, P., 2012. MissForest--non-parametric
 missing value imputation for mixed-type data. \emph{Bioinformatics, 28}(1),

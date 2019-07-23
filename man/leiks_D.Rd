@@ -11,32 +11,25 @@ leiks_D(x)
 ordered data or data that can be coerced into ordered via
 \code{\link{as.factor}} and \code{\link{factor}} with 
 \code{ordered=T}.}
-
-\item{f_x;}{data as a factor (or ordered factor).}
-
-\item{freq}{numeric;
-count of observations in each category in order.}
-
-\item{cdf}{numeric;
-cumulative proportion of observations in each category in order.}
 }
 \value{
 numeric;
             scalar value of Leik's D
 }
 \description{
-Calculate Leiks' D of ordered data using tally of observations in each
-category (provided in order)
+Calculate Leiks' D of ordered data
 }
 \details{
 Calculates the dispersion via the Leik's D statistic for ordinal data using
-a tally of observations in each category and the following formula; \deqn{
-   D = \frac{2}{n - 1} \left(
-           \sum_{j : F_j < 0.5} F_j + \sum_{j : F_j \geq 0.5} 1 - F_j
-       \right)
+the following formula; \deqn{
+   D = \frac{2}{n - 1} \left(%
+           \sum_{k : F_k < 0.5} F_k + \sum_{k : F_k \geq 0.5} 1 - F_k%
+       \right),%
+}{
+   D = 2 \sum (F_{k} if F_{k} < 0.5 or 1 - F_{k} if F_{k} > 0.5) / (n - 1)
 }
-where \eqn{n} is the number of categories, and \eqn{F_k} is the cumulative
-distribution for category indexed by \eqn{k}, except in the case of one
-category, where the value 0 is returned.
+where \eqn{n} is the number of categories, and \eqn{F_k}{F_{k}} is the
+cumulative distribution for category indexed by \eqn{k}, except in the case
+of one category, where the value 0 is returned.
 }
 \keyword{internal}

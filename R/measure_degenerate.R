@@ -14,7 +14,7 @@
 #'            procedure succeeding that used to determine \code{X}.
 #' @param env environment;
 #'            environment of the calling function 
-#             \code{\link{perform_missforest}}
+#'            \code{\link{perform_missforest}}
 #' @return named numeric;
 #'             zero when the limit on number of iterations has been reached,
 #'             otherwise the current iteration.

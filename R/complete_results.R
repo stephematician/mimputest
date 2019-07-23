@@ -35,13 +35,14 @@
 #'               replacing any missing values.
 #'     }
 #'
+#' @seealso \code{\link{smirf}}
+#'
 #' @section To-do:
 #' \itemize{
 #'   \item document \code{complete_results}
 #'   \item write tests for \code{complete_results}
 #' }
 #'
-#' @seealso \code{\link{smirf}}
 #' @export
 complete_results <- function(X,
                              mf,
