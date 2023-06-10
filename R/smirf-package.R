@@ -5,35 +5,34 @@
 #' strictly under those terms
 #'
 #' @references
+#' -   Bartlett, J. (2014, 6-11 July). _Methodology for multiple imputation for
+#'     missing data in electronic health record data_ [Conference presentation].
+#'     International Biometric Conference, Florence, TOS, Italy.
+#'     [Archived 2019-08-19][bartlett2014_archive].
+#' -   Doove, L.L., Van Buuren, S., & Dusseldorp, E. (2014). Recursive
+#'     partitioning for missing data imputation in the presence of interaction
+#'     effects. _Computational Statistics & Data Analysis_, 72, 92-104.
+#'     \doi{10.1016/j.csda.2013.10.025}.
+#' -   Shah, A. D., Bartlett, J. W., Carpenter, J., Nicholas, O., & Hemingway, H.
+#'     (2014). Comparison of random forest and parametric imputation models for
+#'     imputing missing data using MICE: a CALIBER study. _American Journal of
+#'     Epidemiology_, _179_(6), 764-774. \doi{10.1093/aje/kwt312}.
+#' -   Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
+#'     missing value imputation for mixed-type data. _Bioinformatics_, _28_(1),
+#'     112-118. \doi{10.1093/bioinformatics/btr597}.
+#' -   Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
+#'     Imputation by Chained Equations in R. _Journal of Statistical Software_,
+#'     _45_(3), 1-67. \doi{10.18637/jss.v045.i03}.
+#' -   Wright, M. N., & Ziegler, A. (2017). ranger: A fast implementation of
+#'     random forests for high dimensional data in C++ and R. _Journal of
+#'     Statistical Software_, _77_(i01), 1-17.
+#'     \doi{10.18637/jss.v077.i01}.
 #'
-#' Stekhoven, D.J. and Buehlmann, P., 2012. MissForest--non-parametric
-#' missing value imputation for mixed-type data. \emph{Bioinformatics, 28}(1),
-#' pp. 112-118.
-#' \href{https://dx.doi.org/10.1093/bioinformatics/btr597}{
-#'   doi.1.1093/bioinformatics/btr597
-#' }
 #'
-#' Van Buuren, S., Brand, J.P., Groothuis-Oudshoorn, C.G. and Rubin, D.B., 2006.
-#' Fully conditional specification in multivariate imputation. \emph{Journal of
-#' statistical computation and simulation, 76}(12), pp.1049-1064.
-#' \href{https://dx.doi.org/10.1080/10629360600810434}{
-#'   doi.10.1080/10629360600810434
-#' }
+#' @author Stephen Wade <stephematician@gmail.com>
 #'
-#' Wright, M. N. and Ziegler, A., 2017. ranger: A fast implementation of random
-#' forests for high dimensional data in C++ and R. \emph{Journal of Statistical
-#' Software, 77}(i01), pp. 1-17.
-#' \href{https://dx.doi.org/10.18637/jss.v077.i01}{
-#'   doi.10.18637/jss.v077.i01
-#' }
-#'
-#' @author Stephen Wade \email{stephematician@@gmail.com}
-#'
-#' @importFrom stats setNames cor predict
-#' @importFrom utils combn
-#' @import rlang
-#'
+#' @keywords internal
 #' @docType package
-#' @name smirf-package
-NULL
+#' @md
+"_PACKAGE"
 

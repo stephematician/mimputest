@@ -2,21 +2,26 @@
 % Please edit documentation in R/smirf.R
 \name{smirf}
 \alias{smirf}
-\title{Single of multiple imputation of missing data using random forests}
+\title{Single or multiple imputation of missing data using random forests}
 \usage{
-smirf(X, model = NULL, n = 5L, gibbs = F, tree.imp = F,
-  boot.train = F, obs.only = T, verbose = F,
-  X.init.fn = no_information_impute,
-  stop.measure = measure_correlation, loop.limit = 10L,
-  overrides = list(), clean.step = list(), ...)
+smirf(
+  data,
+  model = NULL,
+  n = 5L,
+  sampler = c("gibbs", "missforest"),
+  prediction_type = c("inbag", "bagged"),
+  fn_init = impute_naive_by_sample,
+  stop_measure = measure_degenerate,
+  loop_limit = 10L,
+  overrides = list(),
+  clean_step = list(),
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
-\item{X}{data.frame;
-a incomplete data set including any of numeric, logical, integer,
-factor and ordered data types.}
-
 \item{model}{matrix;
-logical matrix which indicates inclusion of a predictor (named 
+logical matrix which indicates inclusion of a predictor (named
 column) in the model of an imputed value (named row), with the
 order of imputation being the row order, default is a matrix of
 ones with rows for each partially but not-completely missing
@@ -27,12 +32,28 @@ for every partially complete variable.}
 the number of imputations - i.e. number of times the missForest
 algorithm is used.}
 
+\item{overrides}{named list;
+(variable-wise) over-rides for arguments passed to
+\code{\link[ranger]{ranger}} when training on the response
+variable given by the name of the item.}
+
+\item{verbose}{logical;
+print additional output.}
+
+\item{...}{further arguments passed to all calls to
+\code{\link[ranger]{ranger}}, e.g. \code{num.trees} for the number
+of trees in each forest.}
+
+\item{X}{data.frame;
+a incomplete data set including any of numeric, logical, integer,
+factor and ordered data types.}
+
 \item{gibbs}{logical;
 use Gibbs sampling in training steps (\code{T}) rather than the
 predictions from the previous iteration (default).}
 
 \item{tree.imp}{logical;
-use a prediction of missing data from single tree in the forest 
+use a prediction of missing data from single tree in the forest
 when training (\code{T}) rather than the bagged predicted value
 (default).}
 
@@ -44,16 +65,13 @@ when \code{T}, rather than the observed data (default).}
 train on only observed outcomes (default) or use all data
 including predicted/sampled values of missing outcomes (\code{T}).}
 
-\item{verbose}{logical;
-print additional output.}
-
 \item{X.init.fn}{function;
 creates a completed data set to be used as the initial state of
 the missForest procedure given two arguments; \itemize{
-    \item a data.frame
-    \item a list with and item indicating the missing (\code{T})
-          or not-missing (\code{F}) status of each column of the
-          first argument,
+\item a data.frame
+\item a list with and item indicating the missing (\code{T})
+or not-missing (\code{F}) status of each column of the
+first argument,
 } the default \code{\link{no_information_impute}} serves as an
 example.}
 
@@ -62,16 +80,16 @@ evaluates the difference or relationship between the two most
 recently completed data sets during iteration, must accept the
 following arguments;
 \describe{
-     \item{\code{X}}{named list with imputed values (in order of
-         appearance by row) for each column in the data set;}
-     \item{\code{Y}}{named list with imputed values (in order of
-         appearance by row) for each column in the data set;}
-     \item{\code{X_init}}{the original (mised-type) data set with
-          missing values replaced as at the starting point of
-          missForest;}
-     \item{\code{indicator}}{a list with the missing (\code{=T})
-          or not missing (\code{=F}) status of the original data
-          set;}
+\item{\code{X}}{named list with imputed values (in order of
+appearance by row) for each column in the data set;}
+\item{\code{Y}}{named list with imputed values (in order of
+appearance by row) for each column in the data set;}
+\item{\code{X_init}}{the original (mised-type) data set with
+missing values replaced as at the starting point of
+missForest;}
+\item{\code{indicator}}{a list with the missing (\code{=T})
+or not missing (\code{=F}) status of the original data
+set;}
 } and should return a numeric (vector), the default
 \code{\link{measure_correlation}} serves as an example, or see the
 original measure proposed by Stekhoven and Buehlmann (2012) in
@@ -80,47 +98,38 @@ original measure proposed by Stekhoven and Buehlmann (2012) in
 \item{loop.limit}{numeric;
 maximum number of iterations within missForest procedure.}
 
-\item{overrides}{named list;
-(variable-wise) over-rides for arguments passed to
-\code{\link[ranger]{ranger}} when training on the response
-variable given by the name of the item.}
-
 \item{clean.step}{named list;
 each item is a function to clean or post-process the named imputed
 data immediately after it is imputed, taking two arguments;
 \itemize{
-    \item the subset of the data used in the current training step
-          which had missing values of the named data,
-    \item the most recently imputed values of the named data,
+\item the subset of the data used in the current training step
+which had missing values of the named data,
+\item the most recently imputed values of the named data,
 } and should return (post-processed) data of the same length and
 type as the second argument.}
-
-\item{...}{further arguments passed to all calls to 
-\code{\link[ranger]{ranger}}, e.g. \code{num.trees} for the number
-of trees in each forest.}
 }
 \value{
 list;
-            containing the following items; \describe{
-                \item{call}{the call used to create the multiply imputed
-                    data sets;}
-                \item{results}{list where each item (numbered) is itself a
-                    named list of the output for an imputed data set;
-                    \describe{
-                        \item{\code{converged}}{boolean convergence status;}
-                        \item{\code{imputed}}{list of imputed data by
-                            iteration and variable;}
-                        \item{\code{iterations}}{numeric count of iterations
-                            before stopping criteria met;}
-                        \item{\code{oob_error}}{list of oob error by
-                            iteration and variable;}
-                        \item{\code{stop_measures}}{output of the call to
-                            \code{stop.measure} at each iteration;}
-                    }
-                }
-                \item{which_imputed}{named list of which rows the imputed
-                    named data belong to.}
-            }
+containing the following items; \describe{
+\item{call}{the call used to create the multiply imputed
+data sets;}
+\item{results}{list where each item (numbered) is itself a
+named list of the output for an imputed data set;
+\describe{
+\item{\code{converged}}{boolean convergence status;}
+\item{\code{imputed}}{list of imputed data by
+iteration and variable;}
+\item{\code{iterations}}{numeric count of iterations
+before stopping criteria met;}
+\item{\code{oob_error}}{list of oob error by
+iteration and variable;}
+\item{\code{stop_measures}}{output of the call to
+\code{stop.measure} at each iteration;}
+}
+}
+\item{which_imputed}{named list of which rows the imputed
+named data belong to.}
+}
 }
 \description{
 Missing data (multiple) imputation using the missForest algorithm by
@@ -151,16 +160,16 @@ arguments, and any variable-specific argument to pass may be specified in the
 
 The key modifications to the missForest procedure governed by the arguments:
 \describe{
-    \item{\code{gibbs}}{use the most recent predictions for each variable
-        in training and prediction as they become available, like a Gibbs
-        sampler by setting this to \code{T} (default is \code{F});}
-    \item{\code{tree.imp}}{predict using a randomly selected tree for each
-        missing value rather than use the whole-of-forest aggregated
-        prediction by setting this to \code{T} (default is \code{F});}
-    \item{\code{boot.train}}{train on a boot-strapped resample of the data,
-        (default is \code{F}), and;}
-    \item{\code{obs.only}}{train on all rows in the data set by setting to
-        \code{F} or train on observed data only (default is \code{T}).}
+\item{\code{gibbs}}{use the most recent predictions for each variable
+in training and prediction as they become available, like a Gibbs
+sampler by setting this to \code{T} (default is \code{F});}
+\item{\code{tree.imp}}{predict using a randomly selected tree for each
+missing value rather than use the whole-of-forest aggregated
+prediction by setting this to \code{T} (default is \code{F});}
+\item{\code{boot.train}}{train on a boot-strapped resample of the data,
+(default is \code{F}), and;}
+\item{\code{obs.only}}{train on all rows in the data set by setting to
+\code{F} or train on observed data only (default is \code{T}).}
 }
 
 Switching the first two to \code{T} invokes a similar procedure to Multiple
@@ -179,29 +188,34 @@ these values are less than or equal to the previous values (see
 measure is provided by the \code{\link{measure_stekhoven_2012}} function.
 }
 \references{
-Bartlett, J., 2014. 'Methodology for multiple imputation for missing data in
-electronic health record data', presented to _27th International Biometric
-Conference_, Florence, July 6-11.
-
-Doove, L.L., Van Buuren, S. and Dusseldorp, E., 2014. Recursive partitioning
-for missing data imputation in the presence of interaction effects. 
-\emph{Computational Statistics & Data Analysis, 72}, pp. 92-104.
-\href{https://dx.doi.org/10.1016/j.csda.2013.10.025}{doi.10.1016/j.csda.2013.10.025}
-
-Stekhoven, D.J. and Buehlmann, P., 2012. MissForest--non-parametric
-missing value imputation for mixed-type data. \emph{Bioinformatics, 28}(1),
-pp. 112-118.
-\href{https://dx.doi.org/10.1093/bioinformatics/btr597}{doi.1.1093/bioinformatics/btr597}
-
-Wright, M. N. and Ziegler, A., 2017. ranger: A fast implementation of random
-forests for high dimensional data in C++ and R. \emph{Journal of Statistical
-Software, 77}(i01), pp. 1-17. \href{https://dx.doi.org/10.18637/jss.v077.i01}{doi.10.18637/jss.v077.i01}
+\itemize{
+\item Bartlett, J. (2014). Methodology for multiple imputation for missing data
+in electronic health record data, presented to \emph{27th International
+Biometric Conference}, Florence, July 6-11.
+\item Doove, L.L., Van Buuren, S., & Dusseldorp, E. (2014). Recursive
+partitioning for missing data imputation in the presence of interaction
+effects. \emph{Computational Statistics & Data Analysis}, 72, 92-104.
+\doi{10.1016/j.csda.2013.10.025}.
+\item Shah, A. D., Bartlett, J. W., Carpenter, J., Nicholas, O., & Hemingway,
+H. (2014). Comparison of random forest and parametric imputation models
+for imputing missing data using MICE: a CALIBER study. \emph{American journal
+of epidemiology}, 179(6), 764-774. \doi{10.1093/aje/kwt312}.
+\item Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
+missing value imputation for mixed-type data. \emph{Bioinformatics}, 28(1),
+112-118. \doi{10.1093/bioinformatics/btr597}.
+\item Wright, M. N., & Ziegler, A. (2017). ranger: A fast implementation of
+random forests for high dimensional data in C++ and R. \emph{Journal of
+Statistical Software}, 77(i01), 1-17. \doi{10.18637/jss.v077.i01}
+}
 }
 \seealso{
 \code{\link{measure_correlation}}
-         \code{\link{measure_stekhoven_2012}}
-         \code{\link{stop_condition}}
-         \code{\link{no_information_impute}} \code{\link{sample_impute}}
-         \code{\link[missForest]{missForest}}
-         \code{\link[ranger]{ranger}}
+\code{\link{measure_stekhoven_2012}}
+\code{\link{stop_condition}}
+\code{\link{no_information_impute}} \code{\link{sample_impute}}
+\code{\link[missForest]{missForest}}
+\code{\link[ranger]{ranger}}
+
+TODO: check CALIBERrfimpute - some settings differ!
+also get up to speed with: https://academic.oup.com/aje/article/179/6/764/107562
 }

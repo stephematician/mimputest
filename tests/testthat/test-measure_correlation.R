@@ -28,9 +28,9 @@ test_that('single ordered variable', {
 
     expect_equal(measure_correlation(x_old, x_old, data_, list(x=rep(T, 10L))),
                  c(ordered=1))
-    expect_equal(measure_correlation(list(x=ordered(NULL, 
+    expect_equal(measure_correlation(list(x=ordered(NULL,
                                                     levels=levels(x_old$x))),
-                                     list(x=ordered(NULL, 
+                                     list(x=ordered(NULL,
                                                     levels=levels(x_old$x))),
                                      data_,
                                      list(x=rep(F, 10L))),
@@ -67,9 +67,9 @@ test_that('single categorical variable', {
 
     expect_equal(measure_correlation(x_old, x_old, data_, list(x=rep(T, 10L))),
                  c(categorical=1))
-    expect_equal(measure_correlation(list(x=factor(NULL, 
+    expect_equal(measure_correlation(list(x=factor(NULL,
                                                    levels=levels(x_old$x))),
-                                     list(x=factor(NULL, 
+                                     list(x=factor(NULL,
                                                    levels=levels(x_old$x))),
                                      data_,
                                      list(x=rep(F, 10L))),
@@ -118,11 +118,11 @@ test_that('ordered and categorical variables', {
                                      data_,
                                      list(x=rep(T, 10L), y=rep(T, 10L))),
                  c(categorical=1, ordered=1))
-    expect_equal(measure_correlation(list(x=ordered(NULL, 
+    expect_equal(measure_correlation(list(x=ordered(NULL,
                                                     levels=levels(x_old$x)),
                                           y=factor(NULL,
                                                    levels=levels(x_old$y))),
-                                      list(x=ordered(NULL, 
+                                      list(x=ordered(NULL,
                                                     levels=levels(x_old$x)),
                                            y=factor(NULL,
                                                     levels=levels(x_old$y))),

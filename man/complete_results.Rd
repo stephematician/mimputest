@@ -4,8 +4,13 @@
 \alias{complete_results}
 \title{Completed data sets as long data.frame}
 \usage{
-complete_results(X, mf, k = length(mf$results),
-  to.complete = names(mf$which_imputed), replace = F)
+complete_results(
+  X,
+  mf,
+  k = length(mf$results),
+  to.complete = names(mf$which_imputed),
+  replace = F
+)
 }
 \arguments{
 \item{X}{data.frame;

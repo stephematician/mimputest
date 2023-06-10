@@ -1,26 +1,34 @@
 Package: smirf
-Title: Single or multiple imputation of missing data using random forests
+Title: Single or Multiple Imputation of Missing Data Using Random Forests
 Version: 0.0.0.9000
 Authors@R:
-    person("Stephen",
-           "Wade",
-           email = "stephematician@gmail.com",
-           role = c("aut", "cre"))
-Description: Performs single or multiple imputation of missing data using the
-    missForest algorithm by Stekhoven et al. Variations on the training and
-    prediction steps are available to monitor convergence and improve variance
-    of missing data distribution, or to mimic Multiple Imputation by Chained
-    Equations (known as MICE) using random forests.
+    person("Stephen", "Wade", email = "stephematician@gmail.com",
+           role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2573-9683"))
+Description: Perform single or multiple imputation of missing data via random
+    forests. Includes variations on the approach such as; the 'MICE' package
+    proposed by Doove et al, 2014 <doi:10.1016/j.csda.2013.10.025>; an
+    extension the 'MICE' approach proposed by Bartlett which improves pooled
+    confidence interval coverage compared, and; 'missForest' by Stekhoven and
+    Buehlmann, 2010 <doi:10.1093/bioinformatics/btr597>, which is not suited for
+    multiple imputation but could be used for bagged estimation of missing
+    values. For the 'missForest' procedure, and optionally for the other
+    algorithms, alternative (improved) stopping criteria are available. The
+    random forests are fitted by a variation on the 'ranger' package (copyright
+    M N Wright, 2014 <doi:10.18637/jss.v077.i01>) called 'literanger' which
+    reduces the computational effort used in prediction compared to the other
+    multiple imputation packages.
 Depends:
-    R (>= 3.3.0)
+    R (>= 3.5.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests:
-    testthat (>= 2.0.0),
-    tibble
+    testthat (>= 3.0.0),
+    xml2 (>= 1.3.0)
 Imports:
-    ranger (>= 0.10.3),
-    rlang (>= 0.2.0),
+    literanger,
+    rlang (>= 1.1.0),
     stats
-RoxygenNote: 6.1.1
+RoxygenNote: 7.2.3
+SystemRequirements: C++11
+

@@ -98,106 +98,64 @@
 #' Software, 77}(i01), pp. 1-17. \href{https://dx.doi.org/10.18637/jss.v077.i01}{doi.10.18637/jss.v077.i01}
 #'
 #' @keywords internal
-perform_missforest <- function(X_init,
-                               model,
-                               indicator,
-                               ranger_call,
-                               gibbs=F,
-                               tree.imp=F,
-                               boot.train=F,
-                               obs.only=T,
-                               stop.measure=measure_correlation,
-                               loop.limit=10L,
-                               overrides=list(),
-                               clean.step=list()) {
+sampler_loop <- function(data, model, indicator, call_lr_train, sampler,
+                         prediction_type, stop_measure=measure_correlation,
+                         loop_limit=10L, overrides=list(), clean_step=list(),
+                         chain_id=1, verbose=FALSE) {
 
     stop_measures <- list(NULL)
-    oob_error <- data.frame(setNames(lapply(rownames(model),
-                                            function(x) numeric(0)),
-                                     rownames(model)))
-    imputed <- list(mapply(subset,
-                           X_init[rownames(model)],
-                           indicator[rownames(model)],
-                           SIMPLIFY=F))
-    data_ <- X_init
-    converged <- F
-    oob_measure <- factor(setNames(rep(NA, nrow(model)), nm=rownames(model)),
-                          levels=c('mse', 'pfc'))
-    oob_measure[sapply(X_init[rownames(model)], is.factor)] <- 'pfc'
-    oob_measure[is.na(oob_measure)] <- 'mse'
-    n_train <- sapply(indicator, function(x) sum(!x | !obs.only))
+    imputed <- list(mapply(
+        '[', data[rownames(model)], indicator[rownames(model)], SIMPLIFY=FALSE)
+    )
+    converged <- FALSE
+  # categorical variables are monitored via proportion false-classified, while
+  # numeric variables are evaluated by mean square error
+    oob_levels <- c('mse', 'pfc')
+    oob_error <- data.frame(iteration=integer(), variable=character(),
+                            measure=factor(levels=oob_levels),
+                            value=numeric())
+    oob_measure <- sapply(data[rownames(model)], is.factor) %>%
+        replace('mse', ., 'pfc') %>% factor(levels=c('mse', 'pfc'))
 
-    if (!nrow(model))
+    if (nrow(model) == 0)
         return(list(converged=NULL,
                     imputed=imputed,
                     iterations=0L,
                     oob_error=oob_error,
                     stop_measures=stop_measures[-1]))
 
-    for (j in seq_len(loop.limit)) {
+    if (verbose) {
+        pb <- txtProgressBar(paste0('Running chain #', chain_id),
+                             min=0, max=loop_limit)
+        on.exit(close(pb), add=TRUE)
+    }
 
-        imputed[[j+1]] <- list()
- 
-        for (v in rownames(model)) {
+    for (j in seq_len(loop_limit)) {
 
-            # TODO: might need to store this
-            if (boot.train) {
-                rows <- sample.int(n_train, replace=T)
-            } else
-                rows <- seq_len(n_train[[v]])
+        result_j <- sampler_step(
+            data=data, model=model, indicator=indicator,
+            call_lr_train=call_lr_train, sampler=sampler,
+            prediction_type=prediction_type, overrides=overrides,
+            clean_step=clean_step, iter_id=j
+        )
 
-            v_model <- names(data_) %in% c(v, colnames(model)[model[v,]])
-
-            ranger_fit <- eval_tidy(
-                              call_modify(
-                                  ranger_call,
-                                  data=data_[!indicator[[v]] | !obs.only,
-                                             v_model,
-                                             drop=F][rows, T, drop=F],
-                                  dependent.variable.name=v,
-                                  !!! overrides[[v]]
-                              )
-                          )
-
-            imputed[[j+1]][[v]] <- sample_from_ranger(ranger_fit,
-                                                      data_[indicator[[v]],
-                                                            v_model,
-                                                            drop=F],
-                                                      v,
-                                                      tree.imp)
-            oob_error <- rbind(oob_error,
-                               data.frame(iteration=j,
-                                          variable=v,
-                                          measure=unname(oob_measure[v]),
-                                          value=ranger_fit$prediction.error))
-            if (gibbs) {
-                # clean imputed and update training data as available
-                if (is.function(clean.step[[v]]))
-                    imputed[[j+1]][[v]] <- clean.step[[v]](data_[indicator[[v]],
-                                                                 T,
-                                                                 drop=F],
-                                                           imputed[[j+1]][[v]])
-                data_[indicator[[v]],v] <- imputed[[j+1]][[v]]
-            }
+        imputed[[j+1]] <- result_j$imputed
+        for (response_k in rownames(model)) {
+            indicator_k <- indicator[[response_k]]
+            data[indicator_k,response_k] <- imputed[[j+1]][[response_k]]
         }
+        oob_error <- rbind(oob_error, result_j$oob_error)
 
-        if (!gibbs)
-            for (v in rownames(model)) {
-                if (is.function(clean.step[[v]]))
-                    imputed[[j+1]][[v]] <- clean.step[[v]](data_[indicator[[v]],
-                                                                 T,
-                                                                 drop=F],
-                                                           imputed[[j+1]][[v]])
-                data_[indicator[[v]],v] <- imputed[[j+1]][[v]]
-            }
+        stop_measures[[j+1]] <- stop_measure(imputed[[j]], imputed[[j+1]],
+                                             data, indicator)
 
-        stop_measures[[j+1]] <- stop.measure(imputed[[j]], imputed[[j+1]],
-                                                   X_init,      indicator)
-
-        if (stop_condition(stop_measures[[j]], stop_measures[[j+1]])) {
+        if (all_measures_lte(stop_measures[[j]], stop_measures[[j+1]])) {
+            if (verbose) setTxtProgresBar(pb, loop_limit)
             converged <- T
             break
         }
+
+        if (verbose) setTxtProgresBar(pb, j)
 
     }
 

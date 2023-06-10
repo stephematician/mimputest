@@ -1,10 +1,10 @@
-context('entropy')
 
-test_that('empty table', {
+test_that('get NAN result for empty or NA sample', {
     expect_identical(entropy(NA), 0 / 0)
+    expect_identical(entropy(numeric()), 0 / 0)
 })
 
-test_that('single value', {
+test_that('get zero result for single value ', {
 
     expect_identical(entropy(letters[1]), 0)
 
@@ -12,7 +12,7 @@ test_that('single value', {
 
 })
 
-test_that('uniform distribution', {
+test_that('get exact result for uniform distribution of multiple values', {
 
     expect_identical(entropy(letters[1:2]), -sum(rep(log2(1 / 2), 2)) / 2)
 

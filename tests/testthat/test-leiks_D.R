@@ -1,16 +1,16 @@
-context('leiks_D')
 
-test_that('empty table', {
+test_that('get NAN result for empty or NA sample', {
     expect_identical(leiks_D(NA), 0 / 0)
+    expect_identical(leiks_D(numeric()), 0 / 0)
 })
 
-test_that('preserves missing levels', {
+test_that('missing levels are preserved', {
 
     expect_identical(leiks_D(factor(letters[1], levels=letters[1:3])), 0)
 
 })
 
-test_that('single value', {
+test_that('get zero result for single value', {
 
     expect_identical(leiks_D(ordered(letters[1])), 0)
 
@@ -18,7 +18,7 @@ test_that('single value', {
 
 })
 
-test_that('uniform distribution', {
+test_that('get exact result for uniform distribution of multiple values', {
 
     expect_identical(leiks_D(factor(letters[1:2])), 2 * sum(c(1) / 2) / 1)
 

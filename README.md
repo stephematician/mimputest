@@ -1,14 +1,48 @@
-# smirf: Single or multiple imputation of missing data using random forests
+smirf: Single or multiple imputation of missing data using random forests
+=========================================================================
 
 _Stephen Wade_
 
-smirf is an implementation of Stekhoven and B&#252;hlmann's (2012) missForest
-algorithm. It is an iterative procedure for imputation of missing data of mixed
-type via fitting random forests to the observed data. It uses a fast
-implementation of random forests supplied by [`ranger`][ranger_link] (Wright and
-Ziegler, 2017).
+🚧 Under construction 🚧
 
-## Example
+_Yet another_ implementation of multiple imputation using random forests. Like
+others, it is based on the Multiple Imputation via Chained equations ([Van
+Buuren and Groothuis-Oudshoorn, 2011][vanbuuren2011_doi]), however it supports a
+number of variants:
+
+1.  [Doove et al (2014)][doove2014_doi] draws by 'leaf matching', i.e. drawing
+    from observed values that are in the same leaf of any tree, this is the
+    default in the [`mice`][mice_cran] package.
+2.  [Bartlett (2014)][bartlett2014_archive] proposed a modification to [Doove et
+    al (2014)][doove2014_doi] by drawing from bootstrapped values from a random
+    leaf node instead, which may improve bias and coverage of pooled confidence
+    intervals.
+3.  Estimating missing values (not imputing!) via the missForest algorithm
+    by [Stekhoven and B&#252;hlmann (2012)][stekhoven2012_doi], also implemented
+    in the [`missForest`][missforest_cran] package.
+
+A unique feature of this package is it uses [`literanger`][literanger_github] to
+train and draw from random forests. `literanger` is a re-implementation of
+[`ranger`][ranger_cran] (copyright M N Wright, 2014) which is a memory and
+computationally-efficient implementation of the random forest algorithm
+([Wright and Ziegler, 2017][wright2017_doi]). `literanger` enables more
+efficient drawing for the imputation algorithms implemented here.
+
+[bartlett2014_archive]: https://web.archive.org/web/20190819140612/http://thestatsgeek.com/wp-content/uploads/2014/09/RandomForestImpBiometricsConf.pdf
+
+[mice_cran]: https://cran.r-project.org/package=mice
+[missforest_cran]: https://cran.r-project.org/package=missForest
+[ranger_cran]: https://cran.r-project.org/package=ranger
+
+[doove2014_doi]: https://doi.org/10.1016/j.csda.2013.10.025
+[stekhoven2012_doi]: https://doi.org/10.1093/bioinformatics/btr597
+[vanbuuren2011_doi]: https://doi.org/10.18637/jss.v045.i03
+[wright2017_doi]: https://doi.org/10.18637/jss.v077.i01
+
+[literanger_github]: https://github.com/stephematician/literanger
+
+
+# Example
 
 ```r
 require(smirf)
@@ -23,134 +57,169 @@ data_[arrayInd(sample.int(n_prod_m, size=n_prod_m * prop_missing),
                .dim=dim(data_))] <- NA
 
 # Impute missing data - here using the original missForest stopping criterion
-res <- smirf(data_, stop.measure=measure_stekhoven_2012)
+res <- smirf(data_, stop_measure=measure_stekhoven_2012)
 ```
 
-## Installation
 
-Installation is easy using [`devtools`][devtools_link]:
+# Installation
+
+Installation is easy using [`devtools`][devtools_cran]:
 
 ```r
 library(devtools)
 install_github('stephematician/smirf')
 ```
 
-[`ranger`][ranger_link] and [`rlang`][rlang_link] libraries are also required,
-both are available via CRAN:
+[devtools_cran]: https://cran.r-project.org/package=devtools
 
-```r
-install.packages(c('ranger', 'rlang'))
-```
 
-### Alternatives
+# Details
+
+## Default multiple imputation algorithm
+
+The default algorithm of this package is similar to that of [Bartlett
+(2014)][bartlett2014_archive]. The steps are:
+
+-   Specify a random forest model for each variable in the dataset; i.e. the
+    predictors (which can include 'response' indicators), number of cases per
+    leaf, the splitting rule, and so on.
+-   For the first dataset in the sequence, impute missing values with random
+    draws from the observed values.
+-   Generate the sequence of datasets by (repeating):
+    -   For each variable (in a pre-specified order):
+        -   Train a random forest using the _observed_ values and the _most
+            recently imputed_ value of any missing predictor.
+        -   Impute each missing case by:
+            -   Traversing a randomly selected tree (using most recently
+                imputed predictors) to its leaf.
+            -   Draw once from the training data (the 'in bag' cases) that
+                belonged to the leaf.
+        -   Record the imputed values.
+
+
+## MICE random forest imputation algorithm
+
+The difference between the above approach and the one implemented in `mice`
+([Doove et al, 2014][doove2014_doi]) is the step where a new value is drawn for
+each missing case. In `mice` this step is:
+
+-   Find a set of leaves by traversing all trees.
+-   For each leaf in the set:
+    -    Find the observed values that also belong to the leaf.
+-   Pool the observed values (belonging to the leaves) together.
+-   Draw once from the pooled values.
+
+
+## missForest estimation algorithm
+
+If the aim is to estimate the expected missing value, rather than 'impute'
+missing values, then missForest ([Stekhoven and B&#252;hlmann,
+2012][stekhoven2012_doi]) and missForest-likes (see additional variations
+below) might be useful. The steps are:
+
+-   Specify a random forest model for each variable as in MICE.
+-   For the first dataset in the sequence, impute missing values via either
+    the most frequent value (categorical data) or the mean (continuous data).
+-   Generate a sequence of datasets until stopping criteria are satisfied:
+    -   For each variable (in a pre-specified order):
+        -   Train a random forest using the _observed_ values and the values of
+            predictors _from the previous dataset in the sequence_.
+        -   Predict each missing case using the bootstrap aggregated prediction
+            of the random forest.
+    -   Record the dataset.
+    -   Update the stopping criteria; which is test of the change in the
+        normalised root mean square error or the proportion of stationary values
+        from one dataset to the next.
+
+While missForest differs in its initial state, its use of a stopping criterion,
+and that the imputed values are not used in training until the next dataset is
+to be generated; these are somewhat dwarfed by its use of the bootstrap
+aggregated prediction - this means that the values drawn by multiple invokations
+of missForest cannot be pooled in the same manner.
+
+
+## Further variations
+
+### Stopping criterion (missForest)
+
+The original stopping criterion ([Stekhoven and B&#252;hlmann,
+2012][stekhoven2012_doi]) is not location and scale invariant. A
+correlation-based criterion is offered as an alternative. The correlation-based
+criterion is calculated by:
+
+-   For each ordered/continuous variable, calculate the rank correlation between
+    the current and previous dataset.
+-   For each non-ordered (factor) variable, calculate the proportion of
+    stationary values.
+
+When both the mean correlation and proportion of stationary values decreases,
+the stopping criterion is satisfied. We speculate that this identifies when
+unexplained variation of the random forest model is dominant, and that 'entropy'
+is close optimal. _Author's lament_: it seems unpleasant to have incomparable
+measures for different types of data, hopefully other savvier mathematicians can
+find a solution.
+
+
+# Alternatives
 
 For those looking for an alternative to this package:
 
- 1. [`missRanger`][miss_ranger_link] - uses the same underlying forest training
-   package ([`ranger`][ranger_link]) as here.
- 2. [`missForest`][miss_forest_link] - the original missForest package.
+1.  [`mice`][mice_cran] - uses the approach of [Doove et al
+    (2014)][doove2014_doi] and the `ranger` package for training.
+2.  [`CALIBERrfimpute`][caliberrfimpute_cran] - uses the approach of [Shah et al
+    (2014)][shah2014_doi] via the [`randomForest`][randomforest_cran] package
+    for training (slower than `ranger`).
+2.  [`miceranger`][miceranger_cran] - supports predictive mean matching to
+    impute values and uses the `ranger` package for training.
+3.  [`missRanger`][missranger_cran] - same algorithm and training as
+    `miceranger` preceding.
+4.  [`missForest`][missforest_cran] - the original missForest package for
+    missing value estimation, uses the `randomForest` package.
 
-## Details
+[caliberrfimpute_cran]: https://cran.r-project.org/package=CALIBERrfimpute
+[miceranger_cran]: https://cran.r-project.org/package=miceRanger
+[missranger_cran]: https://cran.r-project.org/package=missRanger
+[randomforest_cran]: https://cran.r-project.org/package=randomForest
 
-The original [`missForest`][miss_forest_link] trains and predicts the forests
-via [`randomForest`][random_forest_link], the key differences between this
-implementation and the original are that;
+[shah2014_doi]: https://doi.org/10.1093/aje/kwt312
 
- - each random forest is fit via [`ranger`][ranger_link] (Wright and Ziegler,
-   2017), which is optimised for training on high dimensional data;
- - the stopping criterion has been updated (see
-   [Stopping criterion](#stopping-criterion)) or a user may provide their
-   own function;
- - a user may specify the initial guess for the missing values in the first
-   step of the iterative procedure;
-   - by default, the original Stekhoven and B&#252;hlmann (2012) missForest
-     approach uses the mean or most frequent value of the complete cases of
-     each variable;
-   - an alternative is to sample (with replacement) from the complete cases of
-     each variable (similar to [`mice`][mice_link]), and;
- - a user may specify to run the algorithm as many times as desired (or as
-   the machine can handle!) to perform a kind of pseudo-multiple imputation.
 
-In addition the iterative procedure can be (optionally) modified;
-
- - instead of using the 'whole-of-forest' prediction for each missing value,
-   the prediction a randomly sampled tree in the forest ('tree-sampling') may
-   be used throughout the process;
- - 'Gibbs' sampling may be used as new predictions of missing values become
-   available for each variable;
- - as in Bartlett (2014) a bootstrap of observed data may be used for
-   training each _forest_, and;
- - the forests may be trained on all rows of the data, including predictions
-   for missing values (this is experimental - inspired by [MICE][mice_link]).
-
-Combining tree-sampled missing values, Gibbs sampling and a random initial
-state, is like the implementation of Multiple Imputation via Chained Equations
-(MICE) using random forests proposed by Doove et al (2014) but for one
-difference - the predictions from each tree are based on the mean of the
-terminal node rather than a sample of the training data that belong to the
-terminal node.
-
-## Stopping criterion
-
-The original stopping criterion (Stekhoven and B&#252;hlmann, 2012) is not
-location and scale invariant. As an experiment, it has been replaced by a
-correlation based calculation by default. The user may specify their own 
-stopping criterion, and for this purpose Stekhoven and B&#252;hlmann's (2012)
-criterion is included as an example.
-
-By default, at each iteration the (rank) correlation between the current data
-and the previous data is estimated for ordered/continuous data. For non-ordered
-data, the proportion of stationary values in categorical data is calculated.
-When both the mean correlation and proportion of stationary values decreases,
-the imputation procedure has converged.
-
-_Author's note and lament:_
-
-I am speculating that this criterion identifies when the unexplained variation
-of the random forest model of the (complete) data is dominating, and that
-'entropy' (possibly incorrect use of this term) has been optimised. It still
-seems unpleasant to have incomparable measures for the different types of data.
-I hope that other mathematicians, more savvy than I, can investigate this.
-
-## To-do
+# To-do
 
 Not exhaustive:
 
- - prepare CRAN submission;
- - provide an argument to impute from most missing column to least, similar to
-   [`missForest`][miss_forest_link];
- - evaluation of error given a 'true' data set, similar to
-   [`missForest`][miss_forest_link];
- - calculation of a 'mean' OOB error (only variable-wise is currently
-   available), similar to [`missForest`][miss_forest_link], and;
- - implement predictive mean matching as in [`missRanger`][miss_ranger_link].
+-   prepare CRAN submission;
+-   revisit all code and tests and clean up;
+-   a return value that can be used by MICE?;
+-   provide an argument to impute from most missing column to least, similar to
+    `missForest`;
+-   evaluation of error given a 'true' data set, similar to
+    `missForest`;
+-   re-instate a 'mean' OOB error?
 
-## References
 
-Bartlett, J., 2014. 'Methodology for multiple imputation for missing data in
-electronic health record data', presented to _27th International Biometric
-Conference_, Florence, July 6-11.
+# References
 
-Doove, L.L., Van Buuren, S. and Dusseldorp, E., 2014. Recursive partitioning for
-missing data imputation in the presence of interaction effects. _Computational
-Statistics & Data Analysis, 72_, pp. 92-104.
-[doi.10.1016/j.csda.2013.10.025](https://dx.doi.org/10.1016/j.csda.2013.10.025)
-
-Stekhoven, D.J. and B&#252;hlmann, P., 2012. MissForest&#8212;non-parametric
-missing value imputation for mixed-type data. _Bioinformatics, 28_(1), pp.
-112-118.
-[doi.1.1093/bioinformatics/btr597](https://dx.doi.org/10.1093/bioinformatics/btr597)
-
-Wright, M. N. and Ziegler, A., 2017. ranger: A fast implementation of random
-forests for high dimensional data in C++ and R. _Journal of Statistical
-Software, 77_(i01), pp. 1-17.
-[doi.10.18637/jss.v077.i01](https://dx.doi.org/10.18637/jss.v077.i01).
-
-[devtools_link]: https://cran.r-project.org/package=devtools
-[mice_link]: https://cran.r-project.org/package=mice
-[miss_forest_link]: https://cran.r-project.org/package=missForest
-[miss_ranger_link]: https://cran.r-project.org/package=missRanger
-[random_forest_link]: https://cran.r-project.org/package=randomForest 
-[ranger_link]: https://cran.r-project.org/package=ranger
-[rlang_link]: https://cran.r-project.org/package=rlang
+-   Bartlett, J. (2014, 6-11 July). _Methodology for multiple imputation for
+    missing data in electronic health record data_ [Conference presentation].
+    International Biometric Conference, Florence, TOS, Italy.
+    [Archived 2019-08-19][bartlett2014_archive].
+-   Doove, L.L., Van Buuren, S., & Dusseldorp, E. (2014). Recursive
+    partitioning for missing data imputation in the presence of interaction
+    effects. _Computational Statistics & Data Analysis_, 72, 92-104.
+    [doi:10.1016/j.csda.2013.10.025][doove2014_doi].
+-   Shah, A. D., Bartlett, J. W., Carpenter, J., Nicholas, O., & Hemingway, H.
+    (2014). Comparison of random forest and parametric imputation models for
+    imputing missing data using MICE: a CALIBER study. _American Journal of
+    Epidemiology_, _179_(6), 764-774. [doi:10.1093/aje/kwt312][shah2014_doi].
+-   Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
+    missing value imputation for mixed-type data. _Bioinformatics_, _28_(1),
+    112-118. [doi:10.1093/bioinformatics/btr597][stekhoven2012_doi].
+-   Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
+    Imputation by Chained Equations in R. _Journal of Statistical Software_,
+    _45_(3), 1-67. [doi:10.18637/jss.v045.i03][vanbuuren2011_doi].
+-   Wright, M. N., & Ziegler, A. (2017). ranger: A fast implementation of
+    random forests for high dimensional data in C++ and R. _Journal of
+    Statistical Software_, _77_(i01), 1-17.
+    [doi:10.18637/jss.v077.i01][wright2017_doi].
 

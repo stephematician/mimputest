@@ -2,6 +2,7 @@
 % Please edit documentation in R/smirf-package.R
 \docType{package}
 \name{smirf-package}
+\alias{smirf}
 \alias{smirf-package}
 \title{\pkg{smirf}: Single or multiple imputation of missing data using random forests}
 \description{
@@ -10,27 +11,32 @@ This code is licensed under the MIT license
 strictly under those terms
 }
 \references{
-Stekhoven, D.J. and Buehlmann, P., 2012. MissForest--non-parametric
-missing value imputation for mixed-type data. \emph{Bioinformatics, 28}(1),
-pp. 112-118.
-\href{https://dx.doi.org/10.1093/bioinformatics/btr597}{
-  doi.1.1093/bioinformatics/btr597
-}
-
-Van Buuren, S., Brand, J.P., Groothuis-Oudshoorn, C.G. and Rubin, D.B., 2006.
-Fully conditional specification in multivariate imputation. \emph{Journal of
-statistical computation and simulation, 76}(12), pp.1049-1064.
-\href{https://dx.doi.org/10.1080/10629360600810434}{
-  doi.10.1080/10629360600810434
-}
-
-Wright, M. N. and Ziegler, A., 2017. ranger: A fast implementation of random
-forests for high dimensional data in C++ and R. \emph{Journal of Statistical
-Software, 77}(i01), pp. 1-17.
-\href{https://dx.doi.org/10.18637/jss.v077.i01}{
-  doi.10.18637/jss.v077.i01
+\itemize{
+\item Bartlett, J. (2014, 6-11 July). \emph{Methodology for multiple imputation for
+missing data in electronic health record data} \link{Conference presentation}.
+International Biometric Conference, Florence, TOS, Italy.
+\link[=bartlett2014_archive]{Archived 2019-08-19}.
+\item Doove, L.L., Van Buuren, S., & Dusseldorp, E. (2014). Recursive
+partitioning for missing data imputation in the presence of interaction
+effects. \emph{Computational Statistics & Data Analysis}, 72, 92-104.
+\doi{10.1016/j.csda.2013.10.025}.
+\item Shah, A. D., Bartlett, J. W., Carpenter, J., Nicholas, O., & Hemingway, H.
+(2014). Comparison of random forest and parametric imputation models for
+imputing missing data using MICE: a CALIBER study. \emph{American Journal of
+Epidemiology}, \emph{179}(6), 764-774. \doi{10.1093/aje/kwt312}.
+\item Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
+missing value imputation for mixed-type data. \emph{Bioinformatics}, \emph{28}(1),
+112-118. \doi{10.1093/bioinformatics/btr597}.
+\item Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
+Imputation by Chained Equations in R. \emph{Journal of Statistical Software},
+\emph{45}(3), 1-67. \doi{10.18637/jss.v045.i03}.
+\item Wright, M. N., & Ziegler, A. (2017). ranger: A fast implementation of
+random forests for high dimensional data in C++ and R. \emph{Journal of
+Statistical Software}, \emph{77}(i01), 1-17.
+\doi{10.18637/jss.v077.i01}.
 }
 }
 \author{
-Stephen Wade \email{stephematician@gmail.com}
+Stephen Wade \href{mailto:stephematician@gmail.com}{stephematician@gmail.com}
 }
+\keyword{internal}

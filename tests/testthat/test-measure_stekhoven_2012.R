@@ -34,9 +34,9 @@ test_that('single ordered variable', {
                                         data_,
                                         list(x=rep(T, 10L))),
                  c(categorical=1))
-    expect_equal(measure_stekhoven_2012(list(x=ordered(NULL, 
+    expect_equal(measure_stekhoven_2012(list(x=ordered(NULL,
                                                        levels=levels(x_old$x))),
-                                        list(x=ordered(NULL, 
+                                        list(x=ordered(NULL,
                                                        levels=levels(x_old$x))),
                                         data_,
                                         list(x=rep(F, 10L))),
@@ -58,9 +58,9 @@ test_that('single categorical variable', {
                                         data_,
                                         list(x=rep(T, 10L))),
                  c(categorical=1))
-    expect_equal(measure_stekhoven_2012(list(x=factor(NULL, 
+    expect_equal(measure_stekhoven_2012(list(x=factor(NULL,
                                                       levels=levels(x_old$x))),
-                                        list(x=factor(NULL, 
+                                        list(x=factor(NULL,
                                                       levels=levels(x_old$x))),
                                         data_,
                                         list(x=rep(F, 10L))),

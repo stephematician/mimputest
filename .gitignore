@@ -1,4 +1,5 @@
-.Rhistory
-.RData
+winlibs/
+unsorted/
 
-*.swp
+/doc/
+/Meta/

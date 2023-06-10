@@ -1,4 +1,6 @@
-#' Single of multiple imputation of missing data using random forests
+# Copyright (c) 2018-2023, Stephen Wade. All rights reserved.
+
+#' Single or multiple imputation of missing data using random forests
 #'
 #' Missing data (multiple) imputation using the missForest algorithm by
 #' Stekhoven and Buehlmann (2012) (default) or, alternatively, the MICE with
@@ -58,7 +60,7 @@
 #'            a incomplete data set including any of numeric, logical, integer,
 #'            factor and ordered data types.
 #' @param model matrix;
-#'            logical matrix which indicates inclusion of a predictor (named 
+#'            logical matrix which indicates inclusion of a predictor (named
 #'            column) in the model of an imputed value (named row), with the
 #'            order of imputation being the row order, default is a matrix of
 #'            ones with rows for each partially but not-completely missing
@@ -71,7 +73,7 @@
 #'            use Gibbs sampling in training steps (\code{T}) rather than the
 #'            predictions from the previous iteration (default).
 #' @param tree.imp logical;
-#'            use a prediction of missing data from single tree in the forest 
+#'            use a prediction of missing data from single tree in the forest
 #'            when training (\code{T}) rather than the bagged predicted value
 #'            (default).
 #' @param boot.train logical;
@@ -111,7 +113,7 @@
 #'            original measure proposed by Stekhoven and Buehlmann (2012) in
 #'            \code{\link{measure_stekhoven_2012}}.
 #' @param loop.limit numeric;
-#'            maximum number of iterations within missForest procedure. 
+#'            maximum number of iterations within missForest procedure.
 #' @param overrides named list;
 #'            (variable-wise) over-rides for arguments passed to
 #'            \code{\link[ranger]{ranger}} when training on the response
@@ -125,7 +127,7 @@
 #'                \item the most recently imputed values of the named data,
 #'            } and should return (post-processed) data of the same length and
 #'            type as the second argument.
-#' @param ... further arguments passed to all calls to 
+#' @param ... further arguments passed to all calls to
 #'            \code{\link[ranger]{ranger}}, e.g. \code{num.trees} for the number
 #'            of trees in each forest.
 #' @return list;
@@ -157,131 +159,142 @@
 #'          \code{\link[missForest]{missForest}}
 #'          \code{\link[ranger]{ranger}}
 #'
+#' TODO: check CALIBERrfimpute - some settings differ!
+#' also get up to speed with: https://academic.oup.com/aje/article/179/6/764/107562
+#'
 #' @references
 #'
-#' Bartlett, J., 2014. 'Methodology for multiple imputation for missing data in
-#' electronic health record data', presented to _27th International Biometric
-#' Conference_, Florence, July 6-11.
+#' -   Bartlett, J. (2014). Methodology for multiple imputation for missing data
+#'     in electronic health record data, presented to _27th International
+#'     Biometric Conference_, Florence, July 6-11.
+#' -   Doove, L.L., Van Buuren, S., & Dusseldorp, E. (2014). Recursive
+#'     partitioning for missing data imputation in the presence of interaction
+#'     effects. _Computational Statistics & Data Analysis_, 72, 92-104.
+#'     \doi{10.1016/j.csda.2013.10.025}.
+#' -   Shah, A. D., Bartlett, J. W., Carpenter, J., Nicholas, O., & Hemingway,
+#'     H. (2014). Comparison of random forest and parametric imputation models
+#'     for imputing missing data using MICE: a CALIBER study. _American journal
+#'     of epidemiology_, 179(6), 764-774. \doi{10.1093/aje/kwt312}.
+#' -   Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
+#'     missing value imputation for mixed-type data. _Bioinformatics_, 28(1),
+#'     112-118. \doi{10.1093/bioinformatics/btr597}.
+#' -   Wright, M. N., & Ziegler, A. (2017). ranger: A fast implementation of
+#'     random forests for high dimensional data in C++ and R. _Journal of
+#'     Statistical Software_, 77(i01), 1-17. \doi{10.18637/jss.v077.i01}
 #'
-#' Doove, L.L., Van Buuren, S. and Dusseldorp, E., 2014. Recursive partitioning
-#' for missing data imputation in the presence of interaction effects. 
-#' \emph{Computational Statistics & Data Analysis, 72}, pp. 92-104.
-#' \href{https://dx.doi.org/10.1016/j.csda.2013.10.025}{doi.10.1016/j.csda.2013.10.025}
 #'
-#' Stekhoven, D.J. and Buehlmann, P., 2012. MissForest--non-parametric
-#' missing value imputation for mixed-type data. \emph{Bioinformatics, 28}(1),
-#' pp. 112-118.
-#' \href{https://dx.doi.org/10.1093/bioinformatics/btr597}{doi.1.1093/bioinformatics/btr597}
-#'
-#' Wright, M. N. and Ziegler, A., 2017. ranger: A fast implementation of random
-#' forests for high dimensional data in C++ and R. \emph{Journal of Statistical
-#' Software, 77}(i01), pp. 1-17. \href{https://dx.doi.org/10.18637/jss.v077.i01}{doi.10.18637/jss.v077.i01}
-#'
+#' @importFrom rlang call2 call_modify eval_tidy
+#' @importFrom magrittr %<>% %>%
+#' @importFrom literanger train
 #' @export
-smirf <- function(X,
+#' @md
+smirf <- function(data,
                   model=NULL,
                   n=5L,
-                  gibbs=F,
-                  tree.imp=F,
-                  boot.train=F,
-                  obs.only=T,
-                  verbose=F,
-                  X.init.fn=no_information_impute,
-                  stop.measure=measure_correlation,
-                  loop.limit=10L,
+                  sampler=c('gibbs', 'missforest'),
+                  prediction_type=c('inbag', 'bagged'),
+                  fn_init=impute_naive_by_sample,
+                  stop_measure=measure_degenerate,
+                  loop_limit=10L,
                   overrides=list(),
-                  clean.step=list(),
+                  clean_step=list(),
+                  verbose=FALSE,
                   ...) {
 
-    ranger_args <- enquos(...)
+    lr_train_args <- modifyList(
+        list(), # default arguments to literanger::train
+        enquos(...)
+    )
+    # TODO: warn if not named
 
-    when_verbose_print <- function(...) if (verbose) print(...)
+    sampler <- match.arg(sampler)
+    prediction_type <- match.arg(prediction_type)
 
-    check_smirf_args(         X,     model,          n,     gibbs,     tree.imp,
-                     boot.train,  obs.only,    verbose, X.init.fn, stop.measure,
-                     loop.limit, overrides, clean.step)
+    check_args(
+        data=data, model=model, n=n, use_imputed=use_imputed, fn_init=fn_init,
+        stop_measure=stop_measure, loop_limit=loop_limit, overrides=overrides,
+        clean_step=clean_step, verbose=verbose
+    )
 
-    n_obs <- nrow(X)
+    n_obs <- nrow(data)
 
-    if (!identical(floor(n), as.numeric(n)))
-        warning('non-integer value of n supplied.')
+    if (!identical(round(n), as.numeric(n)))
+        warning('Non-integer value of \'n\' supplied.')
 
-    if (!identical(floor(loop.limit), as.numeric(loop.limit)))
-        warning('non-integer value of loop.limit supplied.')
+    if (!identical(round(loop_limit), as.numeric(loop_limit)))
+        warning('Non-integer value of \'loop_limit\' supplied.')
 
-    if (inherits(X, 'grouped_df'))
-        warning('groups in X will be ignored.')
+    if (inherits(data, 'grouped_df'))
+        warning('Groups in \'data\' will be ignored.')
 
-    # store location of missing data as list
-    indicator <- lapply(X, is.na)
+  # store location of missing data as list
+    indicator <- lapply(data, is.na)
 
-    # filter completely missing variables
-    miss_tally <- sapply(indicator, sum)
-    if (any(miss_tally == n_obs))
-        warning(paste0('excluding the following entirely missing data in X:',
-                       '\n  - ',
-                       paste(names(miss_tally)[miss_tally == n_obs],
-                             collapse=', '), '.'))
+  # filter completely missing variables
+    n_miss <- sapply(indicator, sum)
+    if (any(n_miss == n_obs))
+        warning('Excluding the following entirely missing data in \'data\': ',
+                paste(names(n_miss)[n_miss == n_obs], collapse=', '), '.')
 
-    v_use <- names(miss_tally)[miss_tally != n_obs]
-    indicator <- indicator[v_use]
-    miss_tally <- miss_tally[v_use]
+    included <- names(n_miss)[n_miss != n_obs]
+    indicator <- indicator[included]
+    n_miss <- n_miss[included]
 
-    # sort columns by least to most missing
-    if (is.null(model))
-        model <- matrix(1, nrow=sum(miss_tally > 0), ncol=length(v_use),
-                        dimnames=list(v_use[order(miss_tally)[miss_tally > 0]],
-                                      v_use))
+  # default model includes all covariates, and imputes in the order from least
+  # to most missing values
+    if (is.null(model)) {
+        model <- matrix(1, nrow=length(included), ncol=length(included),
+                        dimnames=list(included, included))
+        diag(model) <- 0
+        model <- model[order(n_miss)[n_miss > 0], , drop=FALSE]
+    }
+  # NOTE: Haven't checked here that data is included
+  # convert integers and logical values to factors or ordered
+    to_categorical <- sapply(data, is.integer) | sapply(data, is.logical)
+    inv_tform_categorical <- lapply(data[to_categorical],
+                                    make_inv_tform_categorical)
+  # fn_init(data, indicator) will construct the initial values for missing data
+  # for a single chain
+    call_init <- rlang::call2(
+        fn_init, data=data[included], indicator=indicator
+    )
+    call_lr_train <- rlang::call_modify(
+        rlang::call2(literanger::train, verbose=verbose),
+        !!! lr_train_args
+    )
 
-    # convert integers and logical values to factors
-    to_categories <- get_maps_to_categories(X[v_use])
-    to_categorical_functions <- lapply(X[names(to_categories)],
-                                       function(j, x)
-                                           unname(x[[storage.mode(j)]]),
-                                       x=list('integer'=as.ordered,
-                                              'logical'=as.factor))
-
-    # invoke as.data.frame here due to ranger not supporting tibble argument
-    X_init_call <- call2(X.init.fn,
-                         X=as.data.frame(X[v_use]),
-                         indicator=indicator)
-
-    ranger_call <- call_modify(call2(ranger::ranger,
-                                     write.forest=T,
-                                     verbose=verbose),
-                               !!! ranger_args)
-
-    res <- list()
-    when_verbose_print('smirf: begin imputations')
+    result <- list()
 
     for (j in seq_len(n)) {
 
-        X_init <- eval_tidy(X_init_call)
-        msgs <- is_valid_initial_state(X_init, X[v_use])
+        data_j <- eval(call_init)
+        msgs <- is_valid_initial_state(data_j, data[included])
         if (length(msgs) > 0)
-            stop(paste(msgs, collapse='\n'))
+            stop('The following initial data conditions failed: ',
+                 paste(msgs, collapse='; '), '.')
 
-        X_init[names(to_categories)] <- mapply(function(f, x) f(x),
-                                               to_categorical_functions,
-                                               X_init[names(to_categories)],
-                                               SIMPLIFY=F)
+        data_j[to_categorical] %<>% lapply(tform_categorical)
 
-        res[[j]] <- perform_missforest(     X_init,     model,    indicator,
-                                       ranger_call,     gibbs,     tree.imp,
-                                        boot.train,  obs.only, stop.measure,
-                                        loop.limit, overrides,   clean.step)
+        result[[j]] <- sampler_loop(
+            data=data_j, model=model, indicator=indicator,
+            call_lr_train=call_lr_train, sampler=sampler,
+            prediction_type=prediction_type,
+            stop_measure=stop_measure, loop_limit=loop_limit,
+            overrides=overrides, clean_step=clean_step, chain_id=j,
+            verbose=verbose
+        )
 
-        # convert back to integer/logical
-        res[[j]]$imputed <- lapply(res[[j]]$imputed,
-                                   unmap_categories,
-                                   to_categories)
+      # convert imputed values in each chain back to integer/logical
+        result[[j]]$imputed <- lapply(
+            res[[j]]$imputed, apply_inv_tform_categorical,
+            inv_tform_categorical=inv_tform_categorical
+        )
 
-        when_verbose_print(paste('  - imputation', j, 'complete.'))
     }
 
-    list(call=match.call(),
+    list(call=match.call(), # TODO: need a better approach to this
          model=model,
-         results=lapply(res,
+         results=lapply(result,
                         post_process_missforest,
                         to_categories=to_categories),
          which_imputed=lapply(indicator, which))
