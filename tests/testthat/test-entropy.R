@@ -1,3 +1,4 @@
+# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
 
 test_that('get NAN result for empty or NA sample', {
     expect_identical(entropy(NA), 0 / 0)

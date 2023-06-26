@@ -1,3 +1,4 @@
+# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
 
 test_that('class is preserved', {
     data <- data.frame(x=numeric(1), y=integer(1), z=logical(1),

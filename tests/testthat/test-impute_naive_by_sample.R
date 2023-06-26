@@ -1,3 +1,4 @@
+# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
 
 test_that('is identity for empty data.frame', {
     data <- data.frame()

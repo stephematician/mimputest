@@ -2,14 +2,21 @@
 % Please edit documentation in R/smirf.R
 \name{smirf}
 \alias{smirf}
-\title{Single or multiple imputation of missing data using random forests}
+\title{A similar iterative procedure spans the process for either a single chain
+for the Multiple Imputation by Chained Equations algorithm, a.k.a. 'mice'
+(van Buuren and Groothuis-Oudshoorn, 2011) and the process of estimation
+by 'missForest' (Stekhoven and Buehlmann, 2012). Each step of the procedure
+involves fitting (sequentially) a random forest to each variable and then
+imputing new values for the missing cases. The two differ by the type of
+prediction used to generate a new value, and by whether the latest imputed
+values are used in training or exclusively those of the preceding step.}
 \usage{
 smirf(
   data,
   model = NULL,
   n = 5L,
   sampler = c("gibbs", "missforest"),
-  prediction_type = c("inbag", "bagged"),
+  prediction_type = c("inbag", "bagged", "doove"),
   fn_init = impute_naive_by_sample,
   stop_measure = measure_degenerate,
   loop_limit = 10L,
@@ -84,7 +91,7 @@ following arguments;
 appearance by row) for each column in the data set;}
 \item{\code{Y}}{named list with imputed values (in order of
 appearance by row) for each column in the data set;}
-\item{\code{X_init}}{the original (mised-type) data set with
+\item{\code{X_init}}{the original (missed-type) data set with
 missing values replaced as at the starting point of
 missForest;}
 \item{\code{indicator}}{a list with the missing (\code{=T})
@@ -132,13 +139,76 @@ named data belong to.}
 }
 }
 \description{
+For a full description of the procedure for a single chain of 'mice' using
+random forests see Doove et al (2014) and Bartlett (2014). In brief, the
+procedure is:
+}
+\details{
+\itemize{
+\item For each variable (in a pre-specified order):
+\itemize{
+\item Train a random forest using the observed values.
+\item For each missing case, traverse one or more trees and identify a pool
+of candidate values from the leaves (for Doove et al, take the
+observed from each leaf, for Bartlett et al, take bootstrap observed
+values from one random leaf).
+\item Draw once from the candidate values and update the variable.
+}
+}
+
+Here, \code{data} must be complete; i.e. any missing value has already been
+filled in some naive way using functions like \code{\link[=impute_naive_by_sample]{impute_naive_by_sample()}}
+(the usual for 'mice') or \code{\link[=impute_naive_by_aggregate]{impute_naive_by_aggregate()}} (the original
+'missForest' approach). \code{indicator} will dictate which values are considered
+missing cases and will be updated by the loop.
+
+\code{model} identifies which variables are included in each random forest. This
+is either a numeric (with zero and one values) or logical matrix. See
+\code{\link[=smirf]{smirf()}} for further details.
+
+Training is performed by a call to \code{\link[literanger:train]{literanger::train()}} given by
+\code{call_lr_train}, which may contain arguments applied to all random
+forests. Per-variable arguments can be supplied using \code{overrides} which will
+replace the 'global' arguments in \code{call_lr_train}. By default, classification
+trees are used for factors, while regression trees are used for continuous
+data.
+
+\code{sampler} identifies whether or not a Gibbs-like sampler is employed
+(\verb{='gibbs'}) over the variables or a 'missForest'-like sampler
+(\verb{='missforest'}). The Gibbs-like sampler trains on the latest imputed
+values, whereas the 'missForest'-like trains on the imputed values from the
+previous iteration's complete data set. \code{prediction_type} set to \code{'inbag'}
+uses Bartlett's prediction (2014), while \code{'doove'} uses the approach from
+'mice' by Doove et al (2014). \code{'bagged'} can be used if estimating missing
+values ala 'missForest'.
+
+\code{stop_measure} can be set to one of \code{\link[=measure_correlation]{measure_correlation()}},
+\code{\link[=measure_stekhoven_2012]{measure_stekhoven_2012()}}, or \code{\link[=measure_degenerate]{measure_degenerate()}}. The latter is
+applicable to 'mice'-like algorithms and stops the loop when it reaches the
+pre-determined \code{loop_limit}, while the former two are variations on stopping
+criteria that can be used in 'missForest'-like estimation.
+
+\code{clean_step} is a per-variable post-processing function called on each
+variable after it has been imputed. It can be used to ensure that constraints
+are applied to variables. Each item in the list is a function that accepts
+\code{data} and \code{imputed}; where the former is the data-set prior to imputed
+values being drawn (or the preceding complete data set if
+\code{sampler='missforest'}) restricted to the missing cases (in order). The
+function should return a vector the same length and type as \code{imputed} with
+the clean values.
+
+All the imputed values (over all iterations) are returned, along with; a
+convergence indicator (if applicable); the number of iterations performed;
+the out-of-bag error on a per-iteration and per-variable basis, and; the
+recorded values of the stopping condition measures for each iteration.
+Single or multiple imputation of missing data using random forests
+
 Missing data (multiple) imputation using the missForest algorithm by
 Stekhoven and Buehlmann (2012) (default) or, alternatively, the MICE with
 random forest procedure of Doove et al (2014). The ranger (Wright and
 Ziegler, 2017) fast implementation of random forest (training) algorithm is
 used.
-}
-\details{
+
 For a full description of the missForest algorithm, see Stekhoven and
 Buehlmann (2012). In brief, at each iteration missing values are imputed for
 each variable by the predictions of a random forest trained on the observed

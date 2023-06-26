@@ -1,4 +1,5 @@
-#' \pkg{smirf}: Single or multiple imputation of missing data using random forests
+#' \pkg{smirf}: Single or multiple imputation of missing data using random
+#' forests.
 #'
 #' This code is licensed under the MIT license
 #' \url{https://www.r-project.org/Licenses/MIT}, and you may use this package
@@ -30,6 +31,9 @@
 #'
 #'
 #' @author Stephen Wade <stephematician@gmail.com>
+#'
+#' @importFrom magrittr %<>% %>%
+#' @importFrom literanger train
 #'
 #' @keywords internal
 #' @docType package

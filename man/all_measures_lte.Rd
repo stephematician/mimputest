@@ -2,48 +2,56 @@
 % Please edit documentation in R/all_measures_lte.R
 \name{all_measures_lte}
 \alias{all_measures_lte}
-\title{Test if all measures are nless-than-or-equal to previous measure.}
+\title{Test if all measures are less-than-or-equal to previous measure.}
 \usage{
 all_measures_lte(measures_before, measures_now)
 }
 \arguments{
-\item{measures_before}{numeric; measures between the second most recently
+\item{measures_before}{numeric: measures between the second most recently
 completed data set and its predecessor.}
 
-\item{measures_now}{numeric; measures between the most recently completed
+\item{measures_now}{numeric: measures between the most recently completed
 dataset and its predecessor.}
 }
 \value{
-logical; \code{TRUE} if all new values are not less than the previous
+logical: \code{TRUE} if all new values are not less than the previous
 values.
 }
 \description{
-The stop condition for the main algorithm loop in missForest (Stekhoven and
-Buehlmann, 2012) requires that all measures have either decreased or
-increased. This is a helper function that tests if all measures are less than
-or equal to the previous value.
+This function tests if the latest set of measures of sequential imputed
+data sets are less than or equal to the previous value. This helps assess the
+stop condition for the main algorithm loop in missForest (Stekhoven and
+Buehlmann, 2012).
 }
 \details{
-Given two (vectors of) measures of the 'change' between iterations for the
-past two iterations of the missForest loop, this should return \code{TRUE} when
-the loop should break. Another function, for example
-\code{\link[=measure_stekhoven_2012]{measure_stekhoven_2012()}}, calculates the measures passed to this test. The
-missForest measures are, for example;
+Given two (vectors of) measures of the 'change' between iterations for each
+of the past two iterations of the missForest loop, this helper should return
+\code{TRUE} when the loop should break (i.e. when the measures have changed
+direction). Calculating the change between datasets is performed by other
+functions , such as \code{\link[=measure_stekhoven_2012]{measure_stekhoven_2012()}}. The measures used by
+missForest are;
 \enumerate{
-\item the \emph{negative} sum of square differences between the imputed values (of
-continuous variables), and;
-\item the proportion of stationary values (for categorical data).
+\item the \emph{negative} normalised square root sum of square differences between
+the imputed values (of continuous variables), and;
+\item the proportion of stationary values (of all categorical data).
 }
 
-Alternatively, we could use;
+Alternatively, we could use the mean over all variables of;
 \enumerate{
-\item the mean of the (rank) correlation between the datasets of each ordered
+\item the (rank) correlation between the datasets of each ordered
 variable, and;
-\item the proportion of stationary values (for non-ordered, categorical data).
+\item the Cramer V between data sets for each non-ordered (categorical)
+variable.
 }
 
-This treats all ordered data the same way, and should identify when the
-entropy is close to a local optimum, see \code{\link[=measure_correlation]{measure_correlation()}}.
+This alternative measure attempts to use correlation and correspondence to
+identify when entropy is close to a local maximum, see
+\code{\link[=measure_correlation]{measure_correlation()}}. No evidence is available to support the use of the
+mean across these two measures, so it is unknown whether the unordered and
+ordered data are being weighted correctly.
+
+For a measure that always breaks the loop after a fixed number of iterations,
+see \code{\link[=measure_degenerate]{measure_degenerate()}}.
 }
 \references{
 \itemize{
@@ -54,4 +62,5 @@ missing value imputation for mixed-type data. \emph{Bioinformatics}, \emph{28}(1
 }
 \seealso{
 \code{\link[=measure_correlation]{measure_correlation()}} \code{\link[=measure_stekhoven_2012]{measure_stekhoven_2012()}}
+\code{\link[=measure_degenerate]{measure_degenerate()}}
 }

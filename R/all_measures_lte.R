@@ -1,37 +1,48 @@
-#' Test if all measures are nless-than-or-equal to previous measure.
+# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
+
+#' Test if all measures are less-than-or-equal to previous measure.
 #'
-#' The stop condition for the main algorithm loop in missForest (Stekhoven and
-#' Buehlmann, 2012) requires that all measures have either decreased or
-#' increased. This is a helper function that tests if all measures are less than
-#' or equal to the previous value.
+#' This function tests if the latest set of measures of sequential imputed
+#' data sets are less than or equal to the previous value. This helps assess the
+#' stop condition for the main algorithm loop in missForest (Stekhoven and
+#' Buehlmann, 2012).
 #'
-#' Given two (vectors of) measures of the 'change' between iterations for the
-#' past two iterations of the missForest loop, this should return `TRUE` when
-#' the loop should break. Another function, for example
-#' [measure_stekhoven_2012()], calculates the measures passed to this test. The
-#' missForest measures are, for example;
+#' Given two (vectors of) measures of the 'change' between iterations for each
+#' of the past two iterations of the missForest loop, this helper should return
+#' `TRUE` when the loop should break (i.e. when the measures have changed
+#' direction). Calculating the change between datasets is performed by other
+#' functions , such as [measure_stekhoven_2012()]. The measures used by
+#' missForest are;
 #'
-#' 1.  the _negative_ sum of square differences between the imputed values (of
-#'     continuous variables), and;
-#' 2.  the proportion of stationary values (for categorical data).
+#' 1.  the _negative_ normalised square root sum of square differences between
+#'     the imputed values (of continuous variables), and;
+#' 2.  the proportion of stationary values (of all categorical data).
 #'
-#' Alternatively, we could use;
+#' Alternatively, we could use the mean over all variables of;
 #'
-#' 1.  the mean of the (rank) correlation between the datasets of each ordered
+#' 1.  the (rank) correlation between the datasets of each ordered
 #'     variable, and;
-#' 2.  the proportion of stationary values (for non-ordered, categorical data).
+#' 2.  the Cramer V between data sets for each non-ordered (categorical)
+#'     variable.
 #'
-#' This treats all ordered data the same way, and should identify when the
-#' entropy is close to a local optimum, see [measure_correlation()].
+#' This alternative measure attempts to use correlation and correspondence to
+#' identify when entropy is close to a local maximum, see
+#' [measure_correlation()]. No evidence is available to support the use of the
+#' mean across these two measures, so it is unknown whether the unordered and
+#' ordered data are being weighted correctly.
 #'
-#' @param measures_before numeric; measures between the second most recently
+#' For a measure that always breaks the loop after a fixed number of iterations,
+#' see [measure_degenerate()].
+#'
+#' @param measures_before numeric: measures between the second most recently
 #' completed data set and its predecessor.
-#' @param measures_now numeric; measures between the most recently completed
+#' @param measures_now numeric: measures between the most recently completed
 #' dataset and its predecessor.
-#' @return logical; `TRUE` if all new values are not less than the previous
+#' @return logical: `TRUE` if all new values are not less than the previous
 #' values.
 #'
 #' @seealso [measure_correlation()] [measure_stekhoven_2012()]
+#' [measure_degenerate()]
 #'
 #' @references
 #' -   Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric

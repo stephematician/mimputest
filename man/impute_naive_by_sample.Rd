@@ -2,7 +2,7 @@
 % Please edit documentation in R/impute_naive.R
 \name{impute_naive_by_sample}
 \alias{impute_naive_by_sample}
-\title{Impute missing data naively by sampling from complete cases}
+\title{Impute missing data naively by sampling from complete cases.}
 \usage{
 impute_naive_by_sample(data, indicator = lapply(data, is.na))
 }
@@ -11,17 +11,17 @@ impute_naive_by_sample(data, indicator = lapply(data, is.na))
 values for a column in the data.}
 }
 \value{
-data.frame; an imputed data set with the same structure as the \code{data}
+data.frame: an imputed data set with the same structure as the \code{data}
 argument.
 }
 \description{
-The initial step in multiple imputation with random forests requires missing
-values to be drawn \emph{without} using the model; in the case of multiple
-imputation via chained equations the complete cases are sampled from with
-replacement (van Buuren and Groothuis-Oudshoorn, 2012).
+Drawing imputed values without using the fully conditional specification (or
+other joint model) is performed during the first step of the 'mice'
+imputation algorithm (van Buuren and Groothuis-Oudshoorn, 2012). In this
+case sampling from complete cases is used.
 }
 \details{
-#' This function can be passed directly to \code{\link[=smirf]{smirf()}} as the value of the
+This function can be passed directly to \code{\link[=smirf]{smirf()}} as the value of the
 \code{fn_init} argument. This function will iterate over each column in the data
 and replace missing values by sampling (with replacement) from the complete
 cases.
@@ -45,5 +45,5 @@ Imputation by Chained Equations in R. \emph{Journal of Statistical Software,
 }
 }
 \seealso{
-\code{\link[=impute_naive]{impute_naive()}} \code{\link[mice:mice]{mice::mice()}}
+\code{\link[=impute_naive]{impute_naive()}}
 }

@@ -1,4 +1,3 @@
-context('smirf')
 
 test_that('no imputations', {
 

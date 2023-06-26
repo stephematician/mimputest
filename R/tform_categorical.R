@@ -1,3 +1,4 @@
+# Copyright (c) 2018-2023, Stephen Wade. All rights reserved.
 
 # transform numeric/logical to categorical type
 tform_categorical <- function(x_j)
@@ -8,6 +9,7 @@ tform_categorical <- function(x_j)
 
 # get a function that transforms from categorical type to numeric/logical
 #' @importFrom stats setNames
+#' @noRd
 make_inv_tform_categorical <- function(x_j) {
 
     if (is.numeric(x_j) && !is.integer(x_j))
@@ -22,7 +24,6 @@ make_inv_tform_categorical <- function(x_j) {
 }
 
 # apply each transform to numeric/logical to a (imputed) data set
-#' @importFrom magrittr %<>%
 apply_inv_tform_categorical <- function(data, inv_tform_categorical) {
     to_categorical <- names(inv_tform_categorical)
     data[to_categorical] %<>% mapply(

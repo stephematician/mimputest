@@ -2,7 +2,7 @@
 % Please edit documentation in R/impute_naive.R
 \name{impute_naive}
 \alias{impute_naive}
-\title{Impute missing data naively using complete cases}
+\title{Impute missing data naively using complete cases.}
 \usage{
 impute_naive(
   data,
@@ -19,12 +19,12 @@ data.frame; an imputed data set with the same structure as the \code{data}
 argument.
 }
 \description{
-The initial step in multiple imputation with random forests requires missing
-values to be drawn \emph{without} using the model; in the case of multiple
-imputation via chained equations the complete cases are sampled from with
-replacement (van Buuren and Groothuis-Oudshoorn, 2012), whereas for the
-missForest algorithm, the most-frequent value or mean is used (Stekhoven and
-Buehlmann, 2012).
+Drawing imputed values without using the fully conditional specification (or
+other joint model) is performed during the first step of both the 'mice'
+imputation algorithm (van Buuren and Groothuis-Oudshoorn, 2012) and the
+'missForest' estimation algorithm (Stekhoven and Buehlmann, 2012). For the
+former, sampling from complete cases is used, whereas for the latter, the
+most-frequent value or mean of the complete cases is used.
 }
 \details{
 Two wrappers are provided for this function so that it can be passed as
@@ -32,7 +32,8 @@ Two wrappers are provided for this function so that it can be passed as
 \code{\link[=impute_naive_by_aggregate]{impute_naive_by_aggregate()}}. In either case, the function will modify each
 column (in order) by replacing missing values with either a sample from the
 complete cases, or an aggregate of the complete cases (such as the most
-frequent value).
+frequent value). The former is for 'mice'-like imputation, the latter is for
+'missForest'.
 
 Sampling generates data with higher entropy than given by the aggregate
 approach. When using a stopping condition, care must be taken that the choice
@@ -56,6 +57,5 @@ Imputation by Chained Equations in R. \emph{Journal of Statistical Software,
 }
 }
 \seealso{
-\code{\link[=smirf]{smirf()}} \code{\link[=impute_naive_by_sample]{impute_naive_by_sample()}} \code{\link[=impute_naive_by_aggregate]{impute_naive_by_aggregate()}}
-\code{\link[mice:mice]{mice::mice()}} \code{\link[missForest:missForest]{missForest::missForest()}}
+\code{\link[=impute_naive_by_sample]{impute_naive_by_sample()}} \code{\link[=impute_naive_by_aggregate]{impute_naive_by_aggregate()}}
 }

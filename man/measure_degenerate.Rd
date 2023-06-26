@@ -2,29 +2,24 @@
 % Please edit documentation in R/measure.R
 \name{measure_degenerate}
 \alias{measure_degenerate}
-\title{Measure if reached limit of iterations}
+\title{Measure if reached limit of iterations.}
 \usage{
-measure_degenerate(X, Y, X_init, indicator, env = parent.frame())
+measure_degenerate(x_sample, y_sample, data, indicator, env = parent.frame())
 }
 \arguments{
-\item{X}{named list;
-imputed values, in order of appearance by row in original data,
-of each variable (named) from one iteration within missForest
-procedure.}
+\item{x_sample}{named list: the imputed values of the missing cases within
+each variable from one iteration of the missForest algorithm.}
 
-\item{Y}{named list;
-imputed values, in order of appearance by row in origina data,
-of each variable (named) from the iteration within the missForest
-procedure succeeding that used to determine \code{X}.}
+\item{y_sample}{named list: the imputed values from the following (or
+preceding) iteration for \code{x_sample} with the same format as \code{x_sample}.}
 
-\item{env}{environment;
-environment of the calling function
-\code{\link{perform_missforest}}}
+\item{env}{environment; environment of the calling function, usually
+\code{\link[=sampler_loop]{sampler_loop()}}.}
 }
 \value{
-named numeric;
-            zero when the limit on number of iterations has been reached,
-            otherwise the current iteration.
+named numeric; \code{measure} equal to zero when the limit has been
+reached or exceeded, otherwise the number (or index) of the current
+iteration.
 }
 \description{
 A degenerate 'measure' of convergence, which simply returns whether to
@@ -33,9 +28,10 @@ continue if the limit of the number of iterations has been reached, or not.
 \examples{
 \dontrun{
 # simply pass to smirf
-smirf(iris, stop.measure=measure_degenerate)
+smirf(iris, stop_measure=measure_degenerate)
 }
+
 }
 \seealso{
-\code{\link{smirf}}
+\code{\link[=sampler_loop]{sampler_loop()}}
 }

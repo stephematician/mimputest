@@ -2,7 +2,7 @@
 % Please edit documentation in R/impute_naive.R
 \name{impute_naive_by_aggregate}
 \alias{impute_naive_by_aggregate}
-\title{Impute missing data naively using aggregate of complete cases}
+\title{Impute missing data naively using aggregate of complete cases.}
 \usage{
 impute_naive_by_aggregate(data, indicator = lapply(data, is.na))
 }
@@ -15,10 +15,10 @@ data.frame; an imputed data set with the same structure as the \code{data}
 argument.
 }
 \description{
-The initial step in multiple imputation with random forests requires missing
-values to be drawn \emph{without} using the model; in the case of the missForest
-algorithm, the most-frequent value or mean is used (Stekhoven and
-Buehlmann, 2012).
+Drawing imputed values without using the fully conditional specification (or
+other joint model) is performed during the first step of the 'missForest'
+estimation algorithm (Stekhoven and Buehlmann, 2012). In this case, the
+the most-frequent value or mean of the complete cases is used.
 }
 \details{
 This function can be passed directly to \code{\link[=smirf]{smirf()}} as the value of the
@@ -26,7 +26,7 @@ This function can be passed directly to \code{\link[=smirf]{smirf()}} as the val
 and replace missing values in one of two ways depending on the type of the
 data;
 \itemize{
-\item if the data are continuous then the mean of the compelte cases is used;
+\item if the data are continuous then the mean of the complete cases is used;
 \item if the data are categorical (including logical, integers, etc) then the
 most frequent value is used, in the case of ties a single values is
 randomly selected from the set of most frequent values.
@@ -51,8 +51,5 @@ missing value imputation for mixed-type data. \emph{Bioinformatics, 28}(1),
 }
 }
 \seealso{
-[impute_naive())] [missForest::missForest()]
-
-[impute_naive())]: R:impute_naive())
-[missForest::missForest()]: R:missForest::missForest()
+\code{\link[=impute_naive]{impute_naive()}}
 }

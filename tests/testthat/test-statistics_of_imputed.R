@@ -1,4 +1,3 @@
-context('statistics_of_imputed')
 
 test_that('empty', {
 

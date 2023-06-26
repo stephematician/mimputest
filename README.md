@@ -21,8 +21,8 @@ number of variants:
     by [Stekhoven and B&#252;hlmann (2012)][stekhoven2012_doi], also implemented
     in the [`missForest`][missforest_cran] package.
 
-A unique feature of this package is it uses [`literanger`][literanger_github] to
-train and draw from random forests. `literanger` is a re-implementation of
+Uniquely, this package uses [`literanger`][literanger_github] to train and draw
+from random forests. `literanger` is a re-implementation of
 [`ranger`][ranger_cran] (copyright M N Wright, 2014) which is a memory and
 computationally-efficient implementation of the random forest algorithm
 ([Wright and Ziegler, 2017][wright2017_doi]). `literanger` enables more
@@ -44,20 +44,60 @@ efficient drawing for the imputation algorithms implemented here.
 
 # Example
 
-```r
-require(smirf)
+On the iris dataset with 20% missing, default 'smirf' runs 2.3x as fast as
+'mice' with method 'rf', with the additional advantage given to 'smirf' that the
+confidence interval coverage performs closer to that proposed by
+Bartlett (2014). Comparing like-to-like, e.g. both sampling as per Doove et
+al (2014), 'smirf' runs 1.6x faster.
 
+```r
+require(microbenchmark)
 # Add some missing values completely at random to iris
 set.seed(1)
-
 prop_missing <- 0.2
 data_ <- iris
 n_prod_m <- prod(dim(data_))
 data_[arrayInd(sample.int(n_prod_m, size=n_prod_m * prop_missing),
                .dim=dim(data_))] <- NA
 
-# Impute missing data - here using the original missForest stopping criterion
-res <- smirf(data_, stop_measure=measure_stekhoven_2012)
+microbenchmark(res <- smirf::smirf(data_, n=5L, loop_limit=10L, n_tree=10L))
+#       min       lq     mean   median       uq      max neval
+#  1.087175 1.153564 1.218621 1.185026 1.247474 1.767124   100
+microbenchmark(res <- smirf::smirf(data_, n=5L, loop_limit=10L, n_tree=10L,
+                                   prediction_type='doove'))
+#       min       lq     mean  median       uq      max neval
+#  1.674584 1.716331 1.745929 1.72985 1.773256 1.882677   100
+microbenchmark(res <- mice::mice(data_, m=5L, maxit=10L, method='rf',
+                                 printFlag=FALSE))
+#       min       lq     mean  median       uq      max neval
+#  2.693691 2.726094 2.754054 2.74072 2.770071 3.036368   100
+```
+
+The benefit on larger datasets is of similar magnitude (approximately 2.1x
+faster), e.g.;
+
+```r
+# Make a bigger dummy dataset with some relationship between columns
+n_variable <- 1E2
+n_obs <- 1E4
+data_ <- matrix(0, nrow=n_obs, ncol=n_variable)
+beta_jm1_j <- 0.2 * rnorm(n_variable) # relationship from one column to next
+x_j <- rnorm(n_variable)
+for (j in seq_len(n_variable)) {
+    x_j <- beta_jm1_j * x_j + rnorm(n=n_obs, mean=0, sd=1)
+    data_[,j] <- x_j
+}
+colnames(data_) <- paste0('...', 1:n_variable)
+
+n_prod_m <- prod(dim(data_))
+data_[arrayInd(sample.int(n_prod_m, size=n_prod_m * prop_missing),
+               .dim=dim(data_))] <- NA
+data_ <- as.data.frame(data_)
+
+system.time(res <- smirf::smirf(data_, n=5L, loop_limit=10L, n_tree=10L))
+#  28m 7.64s
+system.time(res <- mice::mice(data_, m=5L, maxit=10L, method='rf', printFlag=FALSE))
+#  59m 58.5s
 ```
 
 
@@ -134,7 +174,7 @@ below) might be useful. The steps are:
 While missForest differs in its initial state, its use of a stopping criterion,
 and that the imputed values are not used in training until the next dataset is
 to be generated; these are somewhat dwarfed by its use of the bootstrap
-aggregated prediction - this means that the values drawn by multiple invokations
+aggregated prediction - this means that the values drawn by multiple invocations
 of missForest cannot be pooled in the same manner.
 
 
@@ -149,15 +189,16 @@ criterion is calculated by:
 
 -   For each ordered/continuous variable, calculate the rank correlation between
     the current and previous dataset.
--   For each non-ordered (factor) variable, calculate the proportion of
-    stationary values.
+-   For each non-ordered (factor) variable, calculate the Cramer V corrected
+    for bias (see <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>).
 
-When both the mean correlation and proportion of stationary values decreases,
-the stopping criterion is satisfied. We speculate that this identifies when
-unexplained variation of the random forest model is dominant, and that 'entropy'
-is close optimal. _Author's lament_: it seems unpleasant to have incomparable
-measures for different types of data, hopefully other savvier mathematicians can
-find a solution.
+The stopping criterion is satisfied when the mean of all these values decreases.
+We speculate that this identifies when unexplained variation of the random
+forest model is dominant, and that 'entropy' is close optimal. _Author's
+lament_: there is no clear picture that these two measures provide a sensible
+weighting for mixed data types (the range of possible values isn't even the
+same between the two), hopefully other savvier mathematicians can find a
+solution.
 
 
 # Alternatives
@@ -189,13 +230,13 @@ For those looking for an alternative to this package:
 Not exhaustive:
 
 -   prepare CRAN submission;
--   revisit all code and tests and clean up;
+-   write package doc;
+-   write tests for `smirf()`;
 -   a return value that can be used by MICE?;
 -   provide an argument to impute from most missing column to least, similar to
     `missForest`;
 -   evaluation of error given a 'true' data set, similar to
     `missForest`;
--   re-instate a 'mean' OOB error?
 
 
 # References

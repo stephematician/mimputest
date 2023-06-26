@@ -1,3 +1,4 @@
+# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
 
 test_that('get error for numeric', {
     expect_error(

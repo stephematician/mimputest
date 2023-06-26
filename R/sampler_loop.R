@@ -1,107 +1,112 @@
-#' Perform missForest iteration
+# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
+
+#' Generate an imputed data set via iterative procedure.
 #'
-#' Perform the missForest (Stekhoven and Buehlmann, 2012) iterative procedure
-#' to impute missing data using random forests. The ranger (Wright and Ziegler,
-#' 2017) fast implementation of random forest (training) algorithm is used. Some
-#' key alterations to the missForest algorithm may be specified by the user.
+#' A similar iterative procedure spans the process for either a single chain
+#' for the Multiple Imputation by Chained Equations algorithm, a.k.a. 'mice'
+#' (van Buuren and Groothuis-Oudshoorn, 2011) and the process of estimation
+#' by 'missForest' (Stekhoven and Buehlmann, 2012). Each step of the procedure
+#' involves fitting (sequentially) a random forest to each variable and then
+#' imputing new values for the missing cases. The two differ by the type of
+#' prediction used to generate a new value, and by whether the latest imputed
+#' values are used in training or exclusively those of the preceding step.
 #'
-#' For a full description of the missForest algorithm, see Stekhoven and
-#' Buehlmann (2012). In brief, at each iteration missing values are imputed for
-#' each variable (in the order of \code{rownames(model)}) by the predictions of
-#' a random forest trained on the observed cases of that variable along with the
-#' completed data set of the previous iteration as the value of the predictors.
-#' This is repeated until some measure of the relationship between iterations
-#' indicates convergence - usually by decreasing from the measure at the
-#' previous iteration.
+#' For a full description of the procedure for a single chain of 'mice' using
+#' random forests see Doove et al (2014) and Bartlett (2014). In brief, the
+#' procedure is:
 #'
-#' Numeric data is treated as continuous and predicted by regression forests
-#' while factors are predicted via classification forests. When called from
-#' \code{smirf} only numeric (non-integer) and factor and ordered data are
-#' present (integer and logical types having been converted to factors).
+#' -   For each variable (in a pre-specified order):
+#'     -   Train a random forest using the observed values.
+#'     -   For each missing case, traverse one or more trees and identify a pool
+#'         of candidate values from the leaves (for Doove et al, take the
+#'         observed from each leaf, for Bartlett et al, take bootstrap observed
+#'         values from one random leaf).
+#'     -   Draw once from the candidate values and update the variable.
 #'
-#' The key modifications to the procedure governed by the arguments \describe{
-#'     \item{\code{gibbs}}{use the most recent predictions for each variable
-#'         in training and prediction as they become available, like a Gibbs
-#'         sampler by setting this to \code{T} (default is \code{F};}
-#'     \item{\code{obs.only}}{train on all rows in the data set instead of
-#'         observed only by setting this to \code{F} (default is \code{T}),
-#'         and;}
-#'     \item{\code{tree.imp}}{predict using a randomly selected tree for each
-#'         missing value rather than use the whole-of-forest aggregated
-#'         prediction by setting this to \code{T} (default is \code{F}).}
-#' }
+#' Here, `data` must be complete; i.e. any missing value has already been
+#' filled in some naive way using functions like [impute_naive_by_sample()]
+#' (the usual for 'mice') or [impute_naive_by_aggregate()] (the original
+#' 'missForest' approach). `indicator` will dictate which values are considered
+#' missing cases and will be updated by the loop.
 #'
-#' Collectively, these three changes make the procedure similar to the
-#' Multiple Imputation via Chained Equations of van Buuren and
-#' Groothuis-Oudshoorn, (2012).
+#' `model` identifies which variables are included in each random forest. This
+#' is either a numeric (with zero and one values) or logical matrix. See
+#' [smirf()] for further details.
 #'
-#' The convergence criterion can be modified by the \code{stop.measure}
-#' argument. The default is to measure the mean rank correlation between
-#' iterations of the ordered data and the stationary rate of the categorical
-#' data (see \code{\link{measure_correlation}}. The procedure halts when both of
-#' these values are less than or equal to the previous values (see
-#' \code{\link{stop_condition}}). The original Stekhoven and Buehlmann (2012)
-#' measure is provided by the \code{\link{measure_stekhoven_2012}} function.
+#' Training is performed by a call to [literanger::train()] given by
+#' `call_lr_train`, which may contain arguments applied to all random
+#' forests. Per-variable arguments can be supplied using `overrides` which will
+#' replace the 'global' arguments in `call_lr_train`. By default, classification
+#' trees are used for factors, while regression trees are used for continuous
+#' data.
+#'
+#' `sampler` identifies whether or not a Gibbs-like sampler is employed
+#' (`='gibbs'`) over the variables or a 'missForest'-like sampler
+#' (`='missforest'`). The Gibbs-like sampler trains on the latest imputed
+#' values, whereas the 'missForest'-like trains on the imputed values from the
+#' previous iteration's complete data set. `prediction_type` set to `'inbag'`
+#' uses Bartlett's prediction (2014), while `'doove'` uses the approach from
+#' 'mice' by Doove et al (2014). `'bagged'` can be used if estimating missing
+#' values ala 'missForest'.
+#'
+#' `stop_measure` can be set to one of [measure_correlation()],
+#' [measure_stekhoven_2012()], or [measure_degenerate()]. The latter is
+#' applicable to 'mice'-like algorithms and stops the loop when it reaches the
+#' pre-determined `loop_limit`, while the former two are variations on stopping
+#' criteria that can be used in 'missForest'-like estimation.
+#'
+#' `clean_step` is a per-variable post-processing function called on each
+#' variable after it has been imputed. It can be used to ensure that constraints
+#' are applied to variables. Each item in the list is a function that accepts
+#' `data` and `imputed`; where the former is the data-set prior to imputed
+#' values being drawn (or the preceding complete data set if
+#' `sampler='missforest'`) restricted to the missing cases (in order). The
+#' function should return a vector the same length and type as `imputed` with
+#' the clean values.
+#'
+#' All the imputed values (over all iterations) are returned, along with; a
+#' convergence indicator (if applicable); the number of iterations performed;
+#' the out-of-bag error on a per-iteration and per-variable basis, and; the
+#' recorded values of the stopping condition measures for each iteration.
 #'
 #' @inheritParams smirf
-#' @param X_init data.frame;
-#'            a data set including any of numeric, logical, integer, factor and
-#'            ordered data types, to be used as the initial state of the
-#'            missForest procedure.
-#' @param indicator named list;
-#'            an indicator of the missing (\code{=T}) or not-missing (\code{=F})
-#'            status of the columns of \code{X_init}.
-#' @param ranger_call call;
-#'            skeleton call to \code{\link[ranger]{ranger}} for fitting random
-#'            forests during the missForest iterative procedure, arguments can
-#'            be over-ridden on a per-variable basis by \code{overrides}.
-#' @return named list;
-#'             results of the iterative procedure given as; \describe{
-#'                 \item{\code{converged}}{logical; indicator of convergence;}
-#'                 \item{\code{oob_error}}{data.frame; variable-wise out-of-bag
-#'                     error at each iteration described by columns;
-#'                     \describe{
-#'                         \item{\code{iteration}}{numeric.}
-#'                         \item{\code{variable}}{factor; name of column in data
-#'                             set.}
-#'                         \item{\code{measure}}{factor; one of \code{mse} (mean
-#'                             square error) for non-integer numeric data or
-#'                             \code{pfc} (proportion falsely classified).}
-#'                         \item{\code{value}}{numeric; out of bag error.}
-#'                     }
-#'                 }
-#'                 \item{\code{stop_measures}}{list; containing the value
-#'                     returned by \code{stop.measure} at each iteration.}
-#'                 \item{\code{imputed}}{list; each item is a named list of
-#'                     imputed values at each iteration, in order of appearance
-#'                     in X_init.}
-#'             }
-#'
-#' @seealso \code{\link{measure_correlation}} \code{\link{measure_stekhoven_2012}}
-#'          \code{\link[missForest]{missForest}} \code{\link[ranger]{ranger}}
-#'          \code{\link{stop_condition}}
+#' @param call_lr_train call: a 'skeleton' call to [literanger::train()] for
+#' fitting random forests, arguments can be over-ridden on a per-variable basis
+#' by `overrides`.
+#' @param chain_id integer (scalar): the identifier of the current chain to be
+#' displayed in the progress bar.
+#' @returns named list: the following results from the iterative procedure:
+#' \describe{
+#'   \item{`converged`}{logical: indicator of convergence.}
+#'   \item{`imputed`}{list: each item contains a named list of imputed values
+#'     (for each variable) from one completed iteration; values are provided in
+#'     the order that missing cases appear in the data (per variable).}
+#'   \item{`iterations`}{integer: the number of completed iterations.}
+#'   \item{`oob_error`}{data.frame: per-variable and per-iteration out-of-bag
+#'     error estimates, with columns `iteration`, `variable`, `measure` (either
+#'     'pfc' for categorical data, or 'mse' for continuous), and `value`.}
+#'   \item{`stop_measures`}{list: each item contains a named numeric vector with
+#'     the stopping criterion measures from one completed iteration.}
+#' }
 #'
 #' @references
+#' -   Bartlett, J. (2014, 6-11 July). _Methodology for multiple imputation for
+#'     missing data in electronic health record data_ [Conference presentation].
+#'     International Biometric Conference, Florence, TOS, Italy.
+#'     [Archived 2019-08-19](https://web.archive.org/web/20190819140612/http://thestatsgeek.com/wp-content/uploads/2014/09/RandomForestImpBiometricsConf.pdf).
+#' -   Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
+#'     missing value imputation for mixed-type data. _Bioinformatics_, 28(1),
+#'     112-118. \doi{10.1093/bioinformatics/btr597}.
+#' -   Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
+#'     Imputation by Chained Equations in R. _Journal of Statistical Software_,
+#'     _45_(3), 1-67. \doi{10.18637/jss.v045.i03}.
 #'
-#' Stekhoven, D.J. and Buehlmann, P., 2012. MissForest--non-parametric
-#' missing value imputation for mixed-type data. \emph{Bioinformatics, 28}(1),
-#' pp. 112-118.
-#' \href{https://dx.doi.org/10.1093/bioinformatics/btr597}{doi.1.1093/bioinformatics/btr597}
-#'
-#' Van Buuren, S. and Groothuis-Oudshoorn, K., 2011. mice: Multivariate
-#' Imputation by Chained Equations in R. _Journal of Statistical Software,
-#' 45_(3). pp. 1-67.
-#' \href{https://dx.doi.org/10.18637/jss.v045.i03}{doi.10.18637/jss.v045.i03}
-#'
-#' Wright, M. N. and Ziegler, A., 2017. ranger: A fast implementation of random
-#' forests for high dimensional data in C++ and R. \emph{Journal of Statistical
-#' Software, 77}(i01), pp. 1-17. \href{https://dx.doi.org/10.18637/jss.v077.i01}{doi.10.18637/jss.v077.i01}
-#'
-#' @keywords internal
+#' @importFrom utils txtProgressBar setTxtProgressBar
+#' @md
 sampler_loop <- function(data, model, indicator, call_lr_train, sampler,
                          prediction_type, stop_measure=measure_correlation,
                          loop_limit=10L, overrides=list(), clean_step=list(),
-                         chain_id=1, verbose=FALSE) {
+                         chain_id=1L, verbose=FALSE) {
 
     stop_measures <- list(NULL)
     imputed <- list(mapply(
@@ -122,7 +127,7 @@ sampler_loop <- function(data, model, indicator, call_lr_train, sampler,
                     imputed=imputed,
                     iterations=0L,
                     oob_error=oob_error,
-                    stop_measures=stop_measures[-1]))
+                    stop_measures=stop_measures[-1L]))
 
     if (verbose) {
         pb <- txtProgressBar(paste0('Running chain #', chain_id),
@@ -136,34 +141,35 @@ sampler_loop <- function(data, model, indicator, call_lr_train, sampler,
             data=data, model=model, indicator=indicator,
             call_lr_train=call_lr_train, sampler=sampler,
             prediction_type=prediction_type, overrides=overrides,
-            clean_step=clean_step, iter_id=j
+            clean_step=clean_step
         )
 
-        imputed[[j+1]] <- result_j$imputed
+        imputed[[j+1L]] <- result_j$imputed
         for (response_k in rownames(model)) {
             indicator_k <- indicator[[response_k]]
-            data[indicator_k,response_k] <- imputed[[j+1]][[response_k]]
+            data[indicator_k,response_k] <- imputed[[j+1L]][[response_k]]
         }
-        oob_error <- rbind(oob_error, result_j$oob_error)
+        oob_error <- rbind(oob_error,
+                           cbind(data.frame(iteration=j), result_j$oob_error))
 
-        stop_measures[[j+1]] <- stop_measure(imputed[[j]], imputed[[j+1]],
-                                             data, indicator)
+        stop_measures[[j+1L]] <- stop_measure(imputed[[j]], imputed[[j+1L]],
+                                              data, indicator)
 
-        if (all_measures_lte(stop_measures[[j]], stop_measures[[j+1]])) {
-            if (verbose) setTxtProgresBar(pb, loop_limit)
+        if (all_measures_lte(stop_measures[[j]], stop_measures[[j+1L]])) {
+            if (verbose) setTxtProgressBar(pb, loop_limit)
             converged <- T
             break
         }
 
-        if (verbose) setTxtProgresBar(pb, j)
+        if (verbose) setTxtProgressBar(pb, j)
 
     }
 
     list(converged=converged,
          imputed=imputed,
-         iterations=length(stop_measures)-1L,
+         iterations=length(stop_measures) - 1L,
          oob_error=oob_error,
-         stop_measures=stop_measures[-1])
+         stop_measures=stop_measures[-1L])
 
 }
 

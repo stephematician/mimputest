@@ -4,7 +4,8 @@
 \name{smirf-package}
 \alias{smirf}
 \alias{smirf-package}
-\title{\pkg{smirf}: Single or multiple imputation of missing data using random forests}
+\title{\pkg{smirf}: Single or multiple imputation of missing data using random
+forests.}
 \description{
 This code is licensed under the MIT license
 \url{https://www.r-project.org/Licenses/MIT}, and you may use this package

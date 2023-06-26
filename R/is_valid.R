@@ -1,50 +1,52 @@
-# Check conditions on X argument in call to smirf
-is_valid_data <- function(X, msgs=list()) {
+# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
 
-    unsupported_type <- names(X)[
-        !sapply(X, is.factor) & !sapply(X, is.numeric) & !sapply(X, is.logical)
+is_valid_data <- function(data, msgs=list()) {
+
+    unsupported_type <- names(data)[
+        !sapply(data, is.factor) & !sapply(data, is.numeric) &
+        !sapply(data, is.logical)
     ]
 
     msgs %<>% c(
         msg_if_not(
             length(unsupported_type) == 0,
-            paste0('following column(s) in \'X\' are unsupported types: ',
-                   paste(unsupported_type, collapse=', '))
+            paste0('The following column(s) in \'data\' are of unsupported ',
+                   'type: ', paste(unsupported_type, collapse=', '))
         ),
-        msg_if_not(any(is.na(X)), 'no missing values in \'x\''),
-        msg_if_not(!all(is.na(X)), 'no non-missing values in \'X\'')
+        msg_if_not(any(is.na(data)), 'No missing values in \'data\''),
+        msg_if_not(!all(is.na(data)), 'No non-missing values in \'data\'')
     )
 
     invisible(msgs)
 
 }
 
-# Check conditions on model variable in call to smirf
-#' @importFrom magrittr %<>%
-is_valid_model <- function(X, model, msgs=list()) {
+
+is_valid_model <- function(data, model, msgs=list()) {
 
     msgs %<>% c(msg_if_not(nrow(model) > 0, '\'model\' is empty (no rows)'))
 
+    nm <- names(data0)
     all_names <- union(rownames(model), colnames(model))
-    not_found <- all_names[!all_names %in% names(X)]
+    not_found <- all_names[!all_names %in% names(data)]
     none_missing <- rownames(model)[
-        rownames(model) %in% names(X)[!apply(is.na(X), 2, any)]
+        rownames(model) %in% nm[!apply(is.na(data), 2, any)]
     ]
-    all_missing <- all_names[all_names %in% names(X)[apply(is.na(X), 2, all)]]
+    all_missing <- all_names[all_names %in% nm[apply(is.na(data), 2, all)]]
 
     msgs %<>% c(
         msg_if_not(
             length(not_found) == 0,
-            paste0('\'order.impute\' contains the following name(s) not found ',
-                   'in \'X\': ', paste(not_found, collapse=', '))
+            paste0('\'model\' contains the following name(s) not found ',
+                   'in \'data\': ', paste(not_found, collapse=', '))
         ), msg_if_not(
             length(none_missing) == 0,
             paste0('\'model\' specifies the following columns with no missing ',
-                   'values in \'X\': ', paste(none_missing, collapse=', '))
+                   'values in \'data\': ', paste(none_missing, collapse=', '))
         ), msg_if_not(
             length(all_missing) == 0,
             paste0('\'model\' specifies the following entirely missing ',
-                   'column(s) in \'X\': ', paste(all_missing, collapse=', '))
+                   'column(s) in \'data\': ', paste(all_missing, collapse=', '))
         )
     )
 
@@ -52,134 +54,191 @@ is_valid_model <- function(X, model, msgs=list()) {
 
 }
 
-# Check conditions on arguments passed to initial state function
-is_valid_X_init_fn <- function(X.init.fn, msgs=list()) {
 
-    X_init_formals <- formals(X.init.fn)
+is_valid_fn_init <- function(fn_init, msgs=list()) {
 
-    if (length(X_init_formals) != 2)
-        msgs <- c(msgs,
-                  paste0('X.init.fn takes incorrect (', length(X_init_formals),
-                         ') number of arguments.'))
+    fn_formals <- formals(fn_init)
+    expected_formals <- c('data', 'indicator')
+    n_expected <- length(expected_formals)
 
-    # really simple run-time checks
-    if (!is.data.frame(X.init.fn(data.frame())))
-        msgs <- c(msgs,
-                  paste('X.init.fn(data.frame()) does not return data.frame.'))
+    msgs %<>% c(
+        msg_if_not(
+            length(fn_formals) >= n_expected,
+            paste0('\'fn_init\' should take at least ', n_expected,
+                   ' arguments (', length(fn_formals), ' found)')
+        ), msg_if_not(
+            identical(names(fn_formals)[1:n_expected], expected_formals),
+            paste('First arguments of \'fn_init\' must have ',
+                  'names:', paste0(expected_formals, collapse=', '))
+        )
+    )
+    tryCatch({
+        msgs %<>% c(
+            msg_if_not(
+                is.data.frame(fn_init(data.frame())),
+                paste('\'fn_init(data.frame())\' did not return data.frame'),
+            ), msg_if_not(
+                nrow(fn_init(data.frame(x=numeric()))) == 0,
+                paste('\'fn_init(data.frame(x=numeric()))\' did not return an',
+                      'empty data.frame')
+            )
+        )
+    }, error=function(e)
+        msgs %<>% c('\'fn_init\' failed with zero-row data.frame')
+    )
+    tryCatch({
+        msgs %<>% c(msg_if_not(
+            all(!is.na(fn_init(data.frame(x=c(NA,0))))),
+            paste('\'fn_init(data.frame(x=c(NA,0)))\' returned NA'))
+        )
+    }, error=function(e)
+        msgs %<>% c('\'fn_init\' failed with single column data.frame')
+    )
 
-    if (!(nrow(X.init.fn(data.frame(x=numeric(0)))) == 0))
-        msgs <- c(msgs,
-                  paste('X.init.fn(data.frame(x=numeric(0)) does not return an',
-                        'empty data.frame.'))
-
-    if (any(is.na(X.init.fn(data.frame(x=c(NA,0))))))
-        msgs <- c(msgs,
-                  paste('X.init.fn(data.frame(x=c(NA,0)) returns NA values.'))
-
-    msgs
+    invisible(msgs)
 
 }
 
 
-# Check conditions on arguments passed to initial state function
-is_valid_stop_measure <- function(stop.measure, msgs=list()) {
+is_valid_stop_measure <- function(stop_measure, msgs=list()) {
 
-    stop_measure_formals <- formals(stop.measure)
+    fn_formals <- formals(stop_measure)
+    expected_formals <- c('x_sample', 'y_sample', 'data', 'indicator')
+    n_expected <- length(expected_formals)
 
-    if (length(stop_measure_formals) < 4 &
-           any(sapply(stop_measure_formals[-1:-4], identical, expr())))
-        msgs <- c(msgs,
-                  paste0('stop.measure requires more than 4 arguments'))
+    msgs %<>% c(
+        msg_if_not(
+            length(fn_formals) >= n_expected,
+            paste0('\'stop_measure\' should take at least ', n_expected,
+                   ' arguments (', length(fn_formals), ' found)')
+        ), msg_if_not(
+            identical(names(fn_formals)[1:n_expected], expected_formals),
+            paste('First arguments of \'stop_measure\' must have ',
+                  'names:', paste0(expected_formals, collapse=', '))
+        )
+    )
 
-    # should consider some run-time tests here
+  # attempt at run-time test that stop_measure works
+    data_ <- data.frame(
+        x0=numeric(1), x1=factor(letters[1]), x2=ordered(letters[1])
+    )
 
-    msgs
-
-}
-
-
-# Check conditions of clean.step argument
-is_valid_clean_step <- function(X, clean.step, msgs=list()) {
-
-    not_found <- names(clean.step)[!(names(clean.step) %in% names(X))]
-    if (length(not_found) > 0)
-        msgs <- c(msgs,
-                  paste0('clean step names following data not found in X:\n',
-                         '  - ', paste0(not_found, collapse=','), '.'))
-
-    not_function <- names(clean.step)[!sapply(clean.step, is.function)]
-    if (length(not_function) > 0)
-        msgs <- c(msgs,
-                  paste0('clean step contains non-function items:\n',
-                         '  - ', paste0(not_function, collapse=','), '.'))
-
-    clean.step_ <- clean.step[!!sapply(clean.step, is.function) &
-                                  names(clean.step) %in% names(X)]
-
-    not_two_args <- names(clean.step_)[
-                        !sapply(clean.step_,
-                                function(x) '...' %in% names(formals(x))) &
-                        !sapply(clean.step_,
-                                function(x) length(formals(x)) >= 2)
-                    ]
-
-    if (length(not_two_args) > 0)
-        msgs <- c(msgs,
-                  paste0('clean step has functions that do not take two',
-                         'arguments:\n  - ',
-                         paste0(not_two_args, collapse=','), '.'))
-
-    clean.step_ <- clean.step_[!(names(clean.step_) %in% not_two_args)]
-
-    not_handle_empty <- list()
-    for (fn in names(clean.step_)) {
+    for (j in seq_along(data_)) {
+        type_str <- paste0('data of type \'', class(data_[[j]])[1], '\'')
         tryCatch({
-            empty_result <- identical(clean.step_[[fn]](X[0,], X[[fn]][0]),
-                                      X[[fn]][0])
-            if (!empty_result)
-                not_handle_empty <- c(not_handle_empty, fn)
-        },
-        error=function(...)
-                  not_handle_empty <- c(not_handle_empty, fn)
+            result <- stop_measure(data_x=data_[,j], data_y=data_[,j],
+                                   data_init=data_[,j],
+                                   indicator=sapply(data_[,j], is.na))
+            msgs %<>% c(msg_if_not(
+                is.numeric(result),
+                paste('Non-numeric result returned by \'stop_measure\' given',
+                       type_str))
+            )
+        }, error=function(e)
+            msgs %<>% c(
+                paste('\'stop_measure\' failed with single-row data.frame',
+                      'given', type_str)
+            )
         )
     }
 
-    if (length(not_handle_empty) > 0)
-        msgs <- c(msgs,
-                  paste0('clean step has functions that do not handle',
-                         'empty data:\n  - ',
-                         paste0(not_handle_empty, collapse=','), '.'))
-
-    msgs
+    invisible(msgs)
 
 }
 
 
-# Check conditions on initial state
-is_valid_initial_state <- function(X_init, X, msgs=list()) {
+is_valid_clean_step <- function(data, clean_step, msgs=list()) {
 
-    if (any(is.na(X_init)))
-        msgs <- c(msgs, 'initial state contains missing data.')
+    nm <- names(data)
+    not_found <- setdiff(names(clean_step), nm)
+    not_function <- names(clean_step)[!sapply(clean_step, is.function)]
+    msgs %<>% c(
+        msg_if_not(
+            length(not_found) == 0,
+            paste0('\'clean_step\' contains following names not found \'data\'',
+                   ': ', paste0(not_found, collapse=','))
+        ),
+        msg_if_not(
+            length(not_function) == 0,
+            paste0('\'clean_step\' contains non-function items: ',
+                   paste0(not_function, collapse=', '))
+        )
+    )
 
-    # FIXME: test that data.frame and tibble ok?
-    attr_equal <- attr.all.equal(X_init, X)
-    if (!is.null(attr_equal))
-        return(c(msgs,
-                 paste0('initial state and data differ in attributes:\n',
-                        paste0('  - ', attr_equal, '.', collapse='\n'))))
+    nm_steps <- setdiff(names(clean_step), union(not_function, not_found))
 
-    cols <- intersect(names(X_init), names(X))
-    column_attr_equal <- mapply(attr.all.equal, X_init[cols], X[cols])
-    if (any(!sapply(column_attr_equal, is.null)))
-        msgs <- c(msgs,
-                  paste0('initial state has column attributes that do not',
-                         'match attributes of same column in data:\n  - ',
-                         paste0(subset(names(column_attr_equal),
-                                       !sapply(column_attr_equal, is.null)),
-                                collapse=', '), '.'))
+    expected_formals <- c('data', 'imputed')
+    fn_formals <- lapply(clean_step[nm_steps], formals)
+    n_expected <- length(expected_formals)
 
-    msgs
+    bad_n_formals <- nm_steps[sapply(fn_formals, length) <= n_expected]
+    bad_names_formals <- nm_steps[
+        lapply(fn_formals, '[', 1:n_expected) %>% lapply(names) %>%
+            lapply(identical, expected_formals)
+    ]
+
+    msgs %<>% c(
+        msg_if_not(
+            length(bad_n_formals) == 0,
+            paste0('\'clean_step\' has following items with too few formal ',
+                   'arguments: ', paste0(bad_n_formals, collapse=', '))
+        ),
+        msg_if_not(
+            length(bad_n_formals) == 0,
+            paste0('\'clean_step\' has following items with incorrect first ',
+                   'argument names: ', paste0(bad_names_formals, collapse=', '))
+        )
+    )
+
+    not_handle_empty <- list()
+    for (fn in nm_step) {
+        tryCatch({
+            empty_result <- identical(clean_step_[[fn]](data[0,], data[[fn]][0]),
+                                      data[[fn]][0])
+            if (!empty_result) not_handle_empty <- c(not_handle_empty, fn)
+        }, error=function(...) not_handle_empty <- c(not_handle_empty, fn))
+    }
+
+    msgs %<>% c(
+        msg_if_not(
+            length(not_handle_empty) == 0,
+            paste0('\'clean step\' has functions that do not handle empty ',
+                   'data: ', paste0(not_handle_empty, collapse=', '))
+        )
+    )
+
+    invisible(msgs)
 
 }
 
+
+is_valid_initial_state <- function(data_j, data, msgs=list()) {
+
+  # TODO: I only check non-missing and attributes here; unsure what else to add.
+    attr_equal <- attr.all.equal(data_j, data)
+
+    cols <- intersect(names(data_j), names(data))
+    column_attr_equal <- mapply(attr.all.equal, data_j[cols], data[cols])
+    is_equal_column_attr <- sapply(column_attr_equal, is.null)
+
+    msgs %<>% c(
+        msg_if_not(all(!is.na(data_j)),
+                   'Initialised data contains NA (missing) values'),
+        # FIXME: test that data.frame and tibble ok?
+        msg_if_not(is.null(attr_equal),
+                   paste0('Initialised data and \'data\' differ in attributes: ',
+                          paste0(attr_equal, collapse=', '))),
+        msg_if_not(
+            all(is_equal_column_attr),
+            paste0('Initialised data has column attributes that do not match',
+                   'attributes of same column in \'data\': ',
+                   paste0(subset(names(column_attr_equal),
+                                 !is_equal_column_attr),
+                          collapse=', '))
+        )
+    )
+
+    invisible(msgs)
+
+}
 

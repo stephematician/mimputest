@@ -2,7 +2,7 @@
 % Please edit documentation in R/complete_results.R
 \name{complete_results}
 \alias{complete_results}
-\title{Completed data sets as long data.frame}
+\title{Generate rows of a matrix sampled from the first `n` natural numbers.}
 \usage{
 complete_results(
   X,
@@ -49,11 +49,34 @@ data.frame;
     }
 }
 \description{
+Imputed datasets are generated once the chained equations loop has finished.
+Each observation that has one or more imputed value is assigned an index
+which determines which chain any imputed value is taken from. This function
+generates a matrix of these indices, with each row corresponding to an
+observation and each column corresponding to one imputed data set.
+}
+\details{
+Within each imputed data set, each observation with a missing value is
+assigned one chain to take values from. Typically the number of imputed data
+sets is equal to the number of chains, and the chain indices are drawn
+without replacement for each observation. Otherwise, the user can specify
+that they should be drawn with replacement if the number of imputed datasets
+is to be greater than the number of chains.
+
+In the case of non-replacement; this function is a little less naive than
+applying `sample.int` to each row - instead if the number of observations is
+large enough it first generates the possible arrangements for each row, and
+then draws from the arrangements (see  `utils::combn`).
+
+When sampling with replacement, the implementation is a trivial call to
+`sample.int`.
+
+Completed data sets as long data.frame
+
 Completed (imputed) data sets given incomplete data passed to
 \code{\link{smirf}} and the output thereof, returned in a long-format
 data.frame.
-}
-\details{
+
 Description
 }
 \section{To-do}{
