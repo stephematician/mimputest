@@ -1,4 +1,7 @@
-#' \pkg{smirf}: Single or multiple imputation of missing data using random
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
+
+#' \pkg{mimputest}: Single or multiple imputation of missing data using random
 #' forests.
 #'
 #' This code is licensed under the MIT license
@@ -7,9 +10,11 @@
 #'
 #' @references
 #' -   Bartlett, J. (2014, 6-11 July). _Methodology for multiple imputation for
-#'     missing data in electronic health record data_ [Conference presentation].
-#'     International Biometric Conference, Florence, TOS, Italy.
+#'     missing data in electronic health record data_ \[Conference
+#'     presentation\]. International Biometric Conference, Florence, TOS, Italy.
 #'     [Archived 2019-08-19][bartlett2014_archive].
+#' -   Breiman, L. (2001). Random forests. _Machine Learning_, _45_, 5-32.
+#'     \doi{10.1023/A:1010933404324}.
 #' -   Doove, L.L., Van Buuren, S., & Dusseldorp, E. (2014). Recursive
 #'     partitioning for missing data imputation in the presence of interaction
 #'     effects. _Computational Statistics & Data Analysis_, 72, 92-104.
@@ -29,14 +34,19 @@
 #'     Statistical Software_, _77_(i01), 1-17.
 #'     \doi{10.18637/jss.v077.i01}.
 #'
+#' [bartlett2014_archive]: https://web.archive.org/web/20190819140612/http://thestatsgeek.com/wp-content/uploads/2014/09/RandomForestImpBiometricsConf.pdf
 #'
 #' @author Stephen Wade <stephematician@gmail.com>
 #'
-#' @importFrom magrittr %<>% %>%
 #' @importFrom literanger train
+#' @importFrom magrittr %<>% %>%
+#' @importFrom utils globalVariables
 #'
 #' @keywords internal
 #' @docType package
+#' @aliases mimputest-package
 #' @md
 "_PACKAGE"
+
+utils::globalVariables('.')
 

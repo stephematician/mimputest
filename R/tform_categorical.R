@@ -1,4 +1,5 @@
-# Copyright (c) 2018-2023, Stephen Wade. All rights reserved.
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 # transform numeric/logical to categorical type
 tform_categorical <- function(x_j)

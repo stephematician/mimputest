@@ -1,4 +1,5 @@
-# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 #' Impute missing data naively using complete cases.
 #'
@@ -10,7 +11,7 @@
 #' most-frequent value or mean of the complete cases is used.
 #'
 #' Two wrappers are provided for this function so that it can be passed as
-#' `fn_init` to [smirf()], these are [impute_naive_by_sample()] and
+#' `fn_init` to [mimputest()], these are [impute_naive_by_sample()] and
 #' [impute_naive_by_aggregate()]. In either case, the function will modify each
 #' column (in order) by replacing missing values with either a sample from the
 #' complete cases, or an aggregate of the complete cases (such as the most
@@ -23,21 +24,22 @@
 #' iterations. We suspect that the 'aggregate' approach will results in better
 #' specificity of the stop condition.
 #'
-#' @inheritParams smirf
-#' @param indicator list (named); each item is the indicator (vector) of missing
-#' values for a column in the data.
-#' @return data.frame; an imputed data set with the same structure as the `data`
+#' @inheritParams sampler_loop
+#' @param mode character: whether to draw randomly from observed cases
+#' (`='sample'`) or to use aggregates such as the mean or most-frequent-value
+#' (`='aggregate'`).
+#' @return data.frame: an imputed data set with the same structure as the `data`
 #' argument.
 #'
 #' @seealso [impute_naive_by_sample()] [impute_naive_by_aggregate()]
 #'
 #' @references
 #' -   Stekhoven, D.J. & Buehlmann, P. (2012). MissForest--non-parametric
-#'     missing value imputation for mixed-type data. _Bioinformatics, 28_(1),
-#'     112-118. <doi:10.1093/bioinformatics/btr597>.
+#'     missing value imputation for mixed-type data. _Bioinformatics_, _28_(1),
+#'     112-118. \doi{10.1093/bioinformatics/btr597}.
 #' -   Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
-#'     Imputation by Chained Equations in R. _Journal of Statistical Software,
-#'     45_(3), 1-67. <doi:10.18637/jss.v045.i03>.
+#'     Imputation by Chained Equations in R. _Journal of Statistical Software_,
+#'     _45_(3), 1-67. \doi{10.18637/jss.v045.i03}.
 #'
 #' @examples
 #' impute_naive(data.frame(x=c(0,1,NA)), mode='sample')
@@ -77,7 +79,7 @@ impute_naive <- function(data,
 #' imputation algorithm (van Buuren and Groothuis-Oudshoorn, 2012). In this
 #' case sampling from complete cases is used.
 #'
-#' This function can be passed directly to [smirf()] as the value of the
+#' This function can be passed directly to [mimputest()] as the value of the
 #' `fn_init` argument. This function will iterate over each column in the data
 #' and replace missing values by sampling (with replacement) from the complete
 #' cases.
@@ -94,12 +96,12 @@ impute_naive <- function(data,
 #'
 #' @references
 #' -   Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
-#' Imputation by Chained Equations in R. _Journal of Statistical Software,
-#' 45_(3), 1-67. <doi:10.18637/jss.v045.i03>.
+#'     Imputation by Chained Equations in R. _Journal of Statistical Software_,
+#'     _45_(3), 1-67. \doi{10.18637/jss.v045.i03}.
 #'
 #' @examples
 #' \dontrun{
-#' smirf(iris, fn_init=impute_naive_by_aggregate)
+#' mimputest(iris, fn_init=impute_naive_by_aggregate)
 #' }
 #' impute_naive_by_sample(data.frame(x=c(0,1,NA)))
 #'
@@ -116,7 +118,7 @@ impute_naive_by_sample <- function(data, indicator=lapply(data, is.na))
 #' estimation algorithm (Stekhoven and Buehlmann, 2012). In this case, the
 #' the most-frequent value or mean of the complete cases is used.
 #'
-#' This function can be passed directly to [smirf()] as the value of the
+#' This function can be passed directly to [mimputest()] as the value of the
 #' `fn_init` argument. This function will iterate over each column in the data
 #' and replace missing values in one of two ways depending on the type of the
 #' data;
@@ -132,7 +134,7 @@ impute_naive_by_sample <- function(data, indicator=lapply(data, is.na))
 #'
 #' @examples
 #' \dontrun{
-#' smirf(iris, fn_init=impute_naive_by_aggregate)
+#' mimputest(iris, fn_init=impute_naive_by_aggregate)
 #' }
 #' impute_naive_by_aggregate(data.frame(x=c(0,1,NA)))
 #'
@@ -144,8 +146,8 @@ impute_naive_by_sample <- function(data, indicator=lapply(data, is.na))
 #'
 #' @references
 #' -   Stekhoven, D.J. & Buehlmann, P. (2012). MissForest--non-parametric
-#' missing value imputation for mixed-type data. _Bioinformatics, 28_(1),
-#' 112-118. <doi:10.1093/bioinformatics/btr597>.
+#'     missing value imputation for mixed-type data. _Bioinformatics_, _28_(1),
+#'     112-118. \doi{10.1093/bioinformatics/btr597}.
 #'
 #' @export
 #' @md

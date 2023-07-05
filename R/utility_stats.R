@@ -1,4 +1,5 @@
-# Copyright (c) 2018-2023, Stephen Wade. All rights reserved.
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 #' Calculate entropy of categorical data.
 #'

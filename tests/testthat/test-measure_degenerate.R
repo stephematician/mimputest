@@ -1,4 +1,5 @@
-# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 test_that('always null if stop on first step', {
     j <- NA_integer_

@@ -57,7 +57,7 @@ see \code{\link[=measure_degenerate]{measure_degenerate()}}.
 \itemize{
 \item Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
 missing value imputation for mixed-type data. \emph{Bioinformatics}, \emph{28}(1),
-112-118. \url{doi:10.1093/bioinformatics/btr597}
+112-118. \doi{10.1093/bioinformatics/btr597}.
 }
 }
 \seealso{

@@ -12,49 +12,93 @@ sampler_step(
   sampler,
   prediction_type,
   overrides,
-  clean_step
+  clean_step,
+  keep_forests
 )
 }
 \arguments{
-\item{model}{matrix;
-logical matrix which indicates inclusion of a predictor (named
-column) in the model of an imputed value (named row), with the
-order of imputation being the row order, default is a matrix of
-ones with rows for each partially but not-completely missing
-variable (in order of least to most missing), and columns
-for every partially complete variable.}
+\item{data}{data.frame: an incomplete data set of numeric, logical, integer,
+factor, or ordered data - one row per observation, one column per variable.}
+
+\item{model}{matrix (named): the included variables for each random forest,
+with one row per random forest (to impute the variable named by the row), one
+column for each variable (named), with elements equal to 1 (or \code{TRUE}) to
+include, and 0 (or \code{FALSE}) to exclude a variable. Default is a matrix where
+each row is a variable with missing values, and all other variables that are
+not entirely missing are included, with rows in order of least to most
+missing.}
+
+\item{indicator}{list: an indicator of missing status for each (named)
+variable for each row in the data, equal to 1 (or \code{TRUE}) for a missing case,
+otherwise 0 (or \code{FALSE}).}
 
 \item{call_lr_train}{call: a 'skeleton' call to \code{\link[literanger:train]{literanger::train()}} for
 fitting random forests, arguments can be over-ridden on a per-variable basis
 by \code{overrides}.}
 
-\item{overrides}{named list;
-(variable-wise) over-rides for arguments passed to
-\code{\link[ranger]{ranger}} when training on the response
-variable given by the name of the item.}
+\item{sampler}{character: the type of sampling loop to use, either \code{'gibbs'},
+where each forest is trained on the most recently imputed values of
+predictors, or \code{'missforest'}, where each forest is trained on the imputed
+values of predictors from the previous iteration.}
+
+\item{prediction_type}{character: the method for drawing values from the
+random forests; \code{'inbag'} is the default, \code{'doove'} is the approach in
+'mice', and \code{'bagged'} is used by 'missForest' (see details and references).}
+
+\item{overrides}{list (named): additional parameters to pass to
+\code{\link[literanger:train]{literanger::train()}} for the corresponding (named) variable.}
+
+\item{clean_step}{list (named): functions to enforce constraints and
+conditions on imputed values, see details.}
+
+\item{keep_forests}{logical: whether to store each forest returned by
+literanger used to generate each imputed dataset (default \code{FALSE}).}
 }
 \value{
-named list: \describe{
-\item{\code{oob_error}}{data.frame: out-of-bag error estimates for each
-modelled variable with columns \code{iteration} (the identified of the
-iteration), \code{variable} (name), \code{measure} (the type of OOB-error measure;
-'mse' is mean square error, 'pfc' is proportion falsely classified), and
-\code{value} is the estimate of the out-of-bag error.}
-\item{\code{imputed}}{named list: the imputed values of missing cases for each
-variable in \code{data}.}
+list (named): the predicted values from each trained random forest
+along with the out-of-bag error and the random forests (if requested). The
+named items are:
+\itemize{
+\item \code{oob_error} data.frame: the out-of-bag error estimates by iteration,
+variable, and measure (i.e. \code{'mse'} for mean-square error, or \code{'pfc'} for
+proportion falsely classified).
+\item \code{imputed} list (named): the imputed values of each missing case for each
+variable, in the order that they appear in the data (for each variable).
+\item \code{forest} list (named): the trained random forests for each variable if
+\code{keep_forests=TRUE}, otherwise \code{NULL} (default).
 }
 }
 \description{
-Each step in the iterative procedure to generate an imputed data set results
-in a new data set by training and predicting (using random forests) the
-missing values for each variable.
+Each step in the sampling loop for Multiple Imputation by Chained Equations,
+a.k.a. 'mice' (van Buuren and Groothuis-Oudshoorn, 2011) and estimation by
+'missForest' (Stekhoven and Buehlmann, 2012) involves fitting (sequentially)
+a random forest to each variable and then imputing new values for the missing
+cases. The differences between the two are the type of prediction drawn for
+each missing case and whether the latest imputed values are used in training
+or held back until the next iteration.
 }
 \details{
-A description of the overall process is given in \code{\link[=sampler_loop]{sampler_loop()}}. This is a
-function internal to 'smirf' that calls the training and prediction methods
-from 'literanger'. The arguments are described in greater detail in
-\code{\link[=sampler_loop]{sampler_loop()}}. At the end of the step the out-of-bag error and the
-imputed values (per variable) are returned.
+This is an internal function called by \code{\link[=sampler_loop]{sampler_loop()}}. See \code{\link[=sampler_loop]{sampler_loop()}}
+for details. This function uses the call supplied by \code{call_lr_train} to
+train each random forest, and then uses the generic \code{\link[stats:predict]{stats::predict()}} to
+draw predictions. The implementation when \code{prediction_type='doove'} mirrors
+that of the 'mice' package by first using \code{prediction_type='nodes'} in the
+prediction call; for the other prediction types the value is passed
+passively to 'literanger'.
+
+The out-of-bag error is calculated for each forest by 'literanger' and
+returned as a data.frame along with the imputed values and, if requested,
+the trained random forest objects.
+}
+\references{
+\itemize{
+\item Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
+missing value imputation for mixed-type data. \emph{Bioinformatics}, \emph{28}(1),
+112-118. \doi{10.1093/bioinformatics/btr597}.
+\item Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
+Imputation by Chained Equations in R. \emph{Journal of Statistical Software},
+\emph{45}(3), 1-67. \doi{10.18637/jss.v045.i03}.
+}
 }
 \seealso{
 \code{\link[=sampler_loop]{sampler_loop()}}

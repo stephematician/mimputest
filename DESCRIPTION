@@ -1,34 +1,38 @@
-Package: smirf
-Title: Single or Multiple Imputation of Missing Data Using Random Forests
+Package: mimputest
+Title: Multiple Imputation or Estimation of Missing Data With Random Forests
 Version: 0.0.0.9000
 Authors@R:
     person("Stephen", "Wade", email = "stephematician@gmail.com",
            role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2573-9683"))
-Description: Perform single or multiple imputation of missing data via random
-    forests. Includes variations on the approach such as; the 'MICE' package
-    proposed by Doove et al, 2014 <doi:10.1016/j.csda.2013.10.025>; an
-    extension the 'MICE' approach proposed by Bartlett which improves pooled
-    confidence interval coverage, and; 'missForest' by Stekhoven and Buehlmann,
-    2010 <doi:10.1093/bioinformatics/btr597>, which is not suited for multiple
-    imputation but could be used for bagged estimation of missing values. For
-    the 'missForest' procedure, and optionally for the other algorithms,
-    alternative (improved) stopping criteria are available. The random forests
-    are fitted by a variation on the 'ranger' package (copyright M N Wright,
-    2014 <doi:10.18637/jss.v077.i01>) called 'literanger' which reduces the
-    computational effort used in prediction compared to the other multiple
-    imputation packages.
+Description: Multiple imputation via chained equations using random forests
+    performed using either the method proposed by Jonathan Bartlett in 2014
+    <https://thatstatsgeek.com> or Doove et al, 2014
+    <doi:10.1016/j.csda.2013.10.025>, as used by the package 'mice'. Bartlett's
+    method may improve confidence interval bias and coverage. Estimation of
+    missing data via the 'missForest' algorithm of Stekhoven and Buehlmann,
+    2010 <doi:10.1093/bioinformatics/btr597>, is also available, with variations
+    on stopping criteria provided that improve consistency across data types.
+    Random forests are trained via the 'literanger' package which is an updated
+    implementation of 'ranger' (copyright M N Wright, 2014
+    <doi:10.18637/jss.v077.i01>) that reduces the computational effort in
+    prediction. Statistics such as mean, variance, entropy, and Leik's D of the
+    imputed samples in each iteration are provided to assess convergence.
 Depends:
     R (>= 3.5.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests:
+    mice (>= 3.15.0),
     testthat (>= 3.0.0),
+    tibble (>= 3.2.1),
     xml2 (>= 1.3.0)
 Imports:
-    literanger,
+    literanger (>= 0.0.2),
+    magrittr (>= 2.0.0),
     rlang (>= 1.1.0),
-    stats
+    stats,
+    utils
 RoxygenNote: 7.2.3
 SystemRequirements: C++11
 

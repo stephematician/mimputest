@@ -13,6 +13,13 @@ each variable from one iteration of the missForest algorithm.}
 
 \item{y_sample}{named list: the imputed values from the following (or
 preceding) iteration for \code{x_sample} with the same format as \code{x_sample}.}
+
+\item{data}{data.frame: an incomplete data set of numeric, logical, integer,
+factor, or ordered data - one row per observation, one column per variable.}
+
+\item{indicator}{list: an indicator of missing status for each (named)
+variable for each row in the data, equal to 1 (or \code{TRUE}) for a missing case,
+otherwise 0 (or \code{FALSE}).}
 }
 \value{
 named numeric; two name values \describe{
@@ -54,8 +61,8 @@ error, see the source code \url{https://github.com/stekhoven/missForest/}
 }
 \examples{
 \dontrun{
-# simply pass to smirf
-smirf(iris, stop_measure=measure_stekhoven_2012)
+# simply pass to mimputest
+mimputest(iris, stop_measure=measure_stekhoven_2012)
 }
 
 }

@@ -1,4 +1,5 @@
-# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 test_that('get NAN result for empty or NA sample', {
     expect_identical(entropy(NA), 0 / 0)

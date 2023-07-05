@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 # TODO: update tests?
 
@@ -24,8 +26,8 @@ test_that('dry run iris', {
   # Check presence and type of returned values
     expect_type(result, 'list')
     expect_named(result,
-                 c('converged',       'imputed', 'iterations',
-                   'oob_error', 'stop_measures'),
+                 c('converged',  'imputed', 'iterations',
+                   'oob_error', 'measures', 'forests'),
                  ignore.order=TRUE)
     expect_false(result$converged)
     expect_identical(result$oob_error,
@@ -33,7 +35,7 @@ test_that('dry run iris', {
                                 measure=factor(levels=c('mse', 'pfc')),
                                 value=numeric()))
     expect_identical(result$iterations, 0L)
-    expect_identical(result$stop_measures, list())
+    expect_identical(result$measures, NULL)
 
   # Check that initial data was recorded correctly
     expect_named(result$imputed[[1]], names(iris), ignore.order=TRUE)
@@ -76,8 +78,8 @@ test_that('each row of iris has one missing value', {
     expect_type(result$oob_error$value, 'double')
     expect_true(all(result$oob_error$value > 0))
 
-    expect_type(result$stop_measures, 'list')
-    expect_length(result$stop_measures, result$iterations)
+    expect_true(inherits(result$measures, 'matrix'))
+    expect_true(nrow(result$measures) == result$iterations)
 
   # Check that initial data was recorded correctly
     expect_named(result$imputed[[1]], names(iris), ignore.order=T)

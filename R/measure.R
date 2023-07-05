@@ -1,4 +1,5 @@
-# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 #' Measure the association between sequential complete data sets.
 #'
@@ -45,9 +46,10 @@
 #'
 #' @examples
 #' \dontrun{
-#' # simply pass to smirf
-#' smirf(iris, stop_measure=measure_correlation)
+#' # simply pass to mimputest
+#' mimputest(iris, stop_measure=measure_correlation)
 #' }
+#' @importFrom stats na.omit
 #' @export
 #' @md
 measure_correlation <- function(x_sample, y_sample, data, indicator,
@@ -102,8 +104,8 @@ measure_correlation <- function(x_sample, y_sample, data, indicator,
 #'
 #' @examples
 #' \dontrun{
-#' # simply pass to smirf
-#' smirf(iris, stop_measure=measure_degenerate)
+#' # simply pass to mimputest
+#' mimputest(iris, stop_measure=measure_degenerate)
 #' }
 #'
 #' @export
@@ -165,8 +167,8 @@ measure_degenerate <- function(x_sample, y_sample, data, indicator,
 #'
 #' @examples
 #' \dontrun{
-#' # simply pass to smirf
-#' smirf(iris, stop_measure=measure_stekhoven_2012)
+#' # simply pass to mimputest
+#' mimputest(iris, stop_measure=measure_stekhoven_2012)
 #' }
 #'
 #' @export

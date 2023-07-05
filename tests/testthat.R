@@ -1,6 +1,6 @@
 library(testthat)
-library(smirf)
+library(mimputest)
 requireNamespace('tibble', quietly=TRUE)
 requireNamespace('literanger', quietly=TRUE)
 
-test_check('smirf')
+test_check('mimputest')

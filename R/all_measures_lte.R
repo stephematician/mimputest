@@ -1,4 +1,5 @@
-# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 #' Test if all measures are less-than-or-equal to previous measure.
 #'
@@ -47,7 +48,7 @@
 #' @references
 #' -   Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
 #'     missing value imputation for mixed-type data. _Bioinformatics_, _28_(1),
-#'     112-118. <doi:10.1093/bioinformatics/btr597>
+#'     112-118. \doi{10.1093/bioinformatics/btr597}.
 #'
 #' @export
 #' @md

@@ -11,11 +11,19 @@ impute_naive(
 )
 }
 \arguments{
-\item{indicator}{list (named); each item is the indicator (vector) of missing
-values for a column in the data.}
+\item{data}{data.frame: an incomplete data set of numeric, logical, integer,
+factor, or ordered data - one row per observation, one column per variable.}
+
+\item{indicator}{list: an indicator of missing status for each (named)
+variable for each row in the data, equal to 1 (or \code{TRUE}) for a missing case,
+otherwise 0 (or \code{FALSE}).}
+
+\item{mode}{character: whether to draw randomly from observed cases
+(\verb{='sample'}) or to use aggregates such as the mean or most-frequent-value
+(\verb{='aggregate'}).}
 }
 \value{
-data.frame; an imputed data set with the same structure as the \code{data}
+data.frame: an imputed data set with the same structure as the \code{data}
 argument.
 }
 \description{
@@ -28,7 +36,7 @@ most-frequent value or mean of the complete cases is used.
 }
 \details{
 Two wrappers are provided for this function so that it can be passed as
-\code{fn_init} to \code{\link[=smirf]{smirf()}}, these are \code{\link[=impute_naive_by_sample]{impute_naive_by_sample()}} and
+\code{fn_init} to \code{\link[=mimputest]{mimputest()}}, these are \code{\link[=impute_naive_by_sample]{impute_naive_by_sample()}} and
 \code{\link[=impute_naive_by_aggregate]{impute_naive_by_aggregate()}}. In either case, the function will modify each
 column (in order) by replacing missing values with either a sample from the
 complete cases, or an aggregate of the complete cases (such as the most
@@ -49,11 +57,11 @@ impute_naive(data.frame(x=c(0,1,NA)), mode='aggregate')
 \references{
 \itemize{
 \item Stekhoven, D.J. & Buehlmann, P. (2012). MissForest--non-parametric
-missing value imputation for mixed-type data. \emph{Bioinformatics, 28}(1),
-112-118. \url{doi:10.1093/bioinformatics/btr597}.
+missing value imputation for mixed-type data. \emph{Bioinformatics}, \emph{28}(1),
+112-118. \doi{10.1093/bioinformatics/btr597}.
 \item Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
-Imputation by Chained Equations in R. \emph{Journal of Statistical Software,
-45}(3), 1-67. \url{doi:10.18637/jss.v045.i03}.
+Imputation by Chained Equations in R. \emph{Journal of Statistical Software},
+\emph{45}(3), 1-67. \doi{10.18637/jss.v045.i03}.
 }
 }
 \seealso{

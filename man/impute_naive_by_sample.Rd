@@ -7,8 +7,12 @@
 impute_naive_by_sample(data, indicator = lapply(data, is.na))
 }
 \arguments{
-\item{indicator}{list (named); each item is the indicator (vector) of missing
-values for a column in the data.}
+\item{data}{data.frame: an incomplete data set of numeric, logical, integer,
+factor, or ordered data - one row per observation, one column per variable.}
+
+\item{indicator}{list: an indicator of missing status for each (named)
+variable for each row in the data, equal to 1 (or \code{TRUE}) for a missing case,
+otherwise 0 (or \code{FALSE}).}
 }
 \value{
 data.frame: an imputed data set with the same structure as the \code{data}
@@ -21,7 +25,7 @@ imputation algorithm (van Buuren and Groothuis-Oudshoorn, 2012). In this
 case sampling from complete cases is used.
 }
 \details{
-This function can be passed directly to \code{\link[=smirf]{smirf()}} as the value of the
+This function can be passed directly to \code{\link[=mimputest]{mimputest()}} as the value of the
 \code{fn_init} argument. This function will iterate over each column in the data
 and replace missing values by sampling (with replacement) from the complete
 cases.
@@ -32,7 +36,7 @@ owing to the entropy being closer to that of the converged process.
 }
 \examples{
 \dontrun{
-smirf(iris, fn_init=impute_naive_by_aggregate)
+mimputest(iris, fn_init=impute_naive_by_aggregate)
 }
 impute_naive_by_sample(data.frame(x=c(0,1,NA)))
 
@@ -40,8 +44,8 @@ impute_naive_by_sample(data.frame(x=c(0,1,NA)))
 \references{
 \itemize{
 \item Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
-Imputation by Chained Equations in R. \emph{Journal of Statistical Software,
-45}(3), 1-67. \url{doi:10.18637/jss.v045.i03}.
+Imputation by Chained Equations in R. \emph{Journal of Statistical Software},
+\emph{45}(3), 1-67. \doi{10.18637/jss.v045.i03}.
 }
 }
 \seealso{

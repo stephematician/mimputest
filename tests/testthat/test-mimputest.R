@@ -1,10 +1,12 @@
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 test_that('no imputations', {
 
     # A minimal run to check types of outputs etc.
     #set.seed(1)
 
-    #res <- smirf(iris, n=0, num.trees=10, loop.limit=1)
+    #res <- mimputest(iris, n=0, num.trees=10, loop.limit=1)
 
 })
 
@@ -14,7 +16,7 @@ test_that('no iterations', {
     #set.seed(1)
 
     # should return a dry run
-    #res <- smirf(iris, n=0, num.trees=10, loop.limit=1)
+    #res <- mimputest(iris, n=0, num.trees=10, loop.limit=1)
 
 })
 
@@ -23,7 +25,7 @@ test_that('complete data', {
     # A minimal run to check types of outputs etc.
     #set.seed(1)
 
-    #res <- smirf(iris, n=1, num.trees=10, loop.limit=1)
+    #res <- mimputest(iris, n=1, num.trees=10, loop.limit=1)
 
 })
 
@@ -38,6 +40,6 @@ test_that('iris data', {
     #data_[arrayInd(sample.int(n_prod_m, size=n_prod_m * prop_missing),
     #               .dim=dim(data_))] <- NA
 
-    #res <- smirf(data_, n=1, num.trees=10, loop.limit=1)
+    #res <- mimputest(data_, n=1, num.trees=10, loop.limit=1)
 
 })

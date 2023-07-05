@@ -15,47 +15,90 @@ sampler_loop(
   loop_limit = 10L,
   overrides = list(),
   clean_step = list(),
+  keep_forests = FALSE,
   chain_id = 1L,
   verbose = FALSE
 )
 }
 \arguments{
-\item{model}{matrix;
-logical matrix which indicates inclusion of a predictor (named
-column) in the model of an imputed value (named row), with the
-order of imputation being the row order, default is a matrix of
-ones with rows for each partially but not-completely missing
-variable (in order of least to most missing), and columns
-for every partially complete variable.}
+\item{data}{data.frame: an incomplete data set of numeric, logical, integer,
+factor, or ordered data - one row per observation, one column per variable.}
+
+\item{model}{matrix (named): the included variables for each random forest,
+with one row per random forest (to impute the variable named by the row), one
+column for each variable (named), with elements equal to 1 (or \code{TRUE}) to
+include, and 0 (or \code{FALSE}) to exclude a variable. Default is a matrix where
+each row is a variable with missing values, and all other variables that are
+not entirely missing are included, with rows in order of least to most
+missing.}
+
+\item{indicator}{list: an indicator of missing status for each (named)
+variable for each row in the data, equal to 1 (or \code{TRUE}) for a missing case,
+otherwise 0 (or \code{FALSE}).}
 
 \item{call_lr_train}{call: a 'skeleton' call to \code{\link[literanger:train]{literanger::train()}} for
 fitting random forests, arguments can be over-ridden on a per-variable basis
 by \code{overrides}.}
 
-\item{overrides}{named list;
-(variable-wise) over-rides for arguments passed to
-\code{\link[ranger]{ranger}} when training on the response
-variable given by the name of the item.}
+\item{sampler}{character: the type of sampling loop to use, either \code{'gibbs'},
+where each forest is trained on the most recently imputed values of
+predictors, or \code{'missforest'}, where each forest is trained on the imputed
+values of predictors from the previous iteration.}
+
+\item{prediction_type}{character: the method for drawing values from the
+random forests; \code{'inbag'} is the default, \code{'doove'} is the approach in
+'mice', and \code{'bagged'} is used by 'missForest' (see details and references).}
+
+\item{stop_measure}{function: a function or character (passed to
+\code{\link[=match.fun]{match.fun()}}) that provides some measure of difference between consecutive
+iterations of the sampler loop, takes four arguments \code{x_sample}, \code{y_sample},
+\code{data} and \code{indicator}; the first two provide the imputed values to compare,
+while the latter are a completed dataset and the indicator of the location of
+missing values; default is \code{\link[=measure_degenerate]{measure_degenerate()}} which stops when
+\code{loop_limit} is reached, see details for more measures.}
+
+\item{loop_limit}{integer: non-negative upper limit on the number of
+iterations to perform in any single chain; default is 10.}
+
+\item{overrides}{list (named): additional parameters to pass to
+\code{\link[literanger:train]{literanger::train()}} for the corresponding (named) variable.}
+
+\item{clean_step}{list (named): functions to enforce constraints and
+conditions on imputed values, see details.}
+
+\item{keep_forests}{logical: whether to store each forest returned by
+literanger used to generate each imputed dataset (default \code{FALSE}).}
 
 \item{chain_id}{integer (scalar): the identifier of the current chain to be
-displayed in the progress bar.}
+displayed in the progress bar.
+list (named, class \code{mimputest}): The result from each sampling loop
+is provided, along with; information about the call and the parameters used to
+run the samplers; the convergence status and other summary statistics from
+each sampler (chain), and; some record-keeping. The named items are:}
 
-\item{verbose}{logical;
-print additional output.}
+\item{verbose}{logical: whether to provide progress bars for each chain.}
 }
 \value{
-named list: the following results from the iterative procedure:
-\describe{
-\item{\code{converged}}{logical: indicator of convergence.}
-\item{\code{imputed}}{list: each item contains a named list of imputed values
-(for each variable) from one completed iteration; values are provided in
-the order that missing cases appear in the data (per variable).}
-\item{\code{iterations}}{integer: the number of completed iterations.}
-\item{\code{oob_error}}{data.frame: per-variable and per-iteration out-of-bag
-error estimates, with columns \code{iteration}, \code{variable}, \code{measure} (either
-'pfc' for categorical data, or 'mse' for continuous), and \code{value}.}
-\item{\code{stop_measures}}{list: each item contains a named numeric vector with
-the stopping criterion measures from one completed iteration.}
+list (named): the result from each iteration in the sampler loop
+along with; the number of iterations performs, convergence measures and
+status, the out-of-bag error during training and the forests (if requested).
+The named items are:
+\itemize{
+\item \code{converged} (logical): the indicator of convergence status for the
+sampler loop (always \code{TRUE} when \code{\link[=measure_degenerate]{measure_degenerate()}} is used and no
+error occured).
+\item \code{imputed} (list): the imputed values for each iteration, each item
+contains the imputed values of each variable with values in the same
+order as the missing cases in the data (For the variable).
+\item \code{iterations} (integer): the number of iterations performed.
+\item \code{oob_error} data.frame; the out-of-bag error for each random forest by
+iteration and variable.
+\item \code{measures} data.frame: the values of the criterion measure(s) (as
+returned by the function provided as \code{stop_measure}) with one row per
+iteration.
+\item \code{forests} (list): the random forests for each variable from the final
+iteration of each sampler if \code{keep_forests=TRUE}, otherwise \code{NULL}
+(default)
 }
 }
 \description{
@@ -92,14 +135,15 @@ missing cases and will be updated by the loop.
 
 \code{model} identifies which variables are included in each random forest. This
 is either a numeric (with zero and one values) or logical matrix. See
-\code{\link[=smirf]{smirf()}} for further details.
+\code{\link[=mimputest]{mimputest()}} for further details.
 
 Training is performed by a call to \code{\link[literanger:train]{literanger::train()}} given by
 \code{call_lr_train}, which may contain arguments applied to all random
 forests. Per-variable arguments can be supplied using \code{overrides} which will
 replace the 'global' arguments in \code{call_lr_train}. By default, classification
-trees are used for factors, while regression trees are used for continuous
-data.
+trees are used for factors (including ordered), logical and integers, while
+regression trees are used for numeric (continuous) data. See also
+\code{\link[=mimputest]{mimputest()}} for information about default values used.
 
 \code{sampler} identifies whether or not a Gibbs-like sampler is employed
 (\verb{='gibbs'}) over the variables or a 'missForest'-like sampler
@@ -110,37 +154,55 @@ uses Bartlett's prediction (2014), while \code{'doove'} uses the approach from
 'mice' by Doove et al (2014). \code{'bagged'} can be used if estimating missing
 values ala 'missForest'.
 
+The procedure for drawing random values from a forest for multiple imputation
+algorithms is either the usual 'mice' procedure, as per Doove et al, 2014, or
+the procedure given by Bartlett, 2014. For estimation of missing values, the
+procedure would be the usual 'bagged' approach for a random forest
+(Breiman 2001). This is specified via \code{prediction_type} which is either
+\code{'inbag'} (Bartlett), \code{'doove'} (Doove) or \code{'bagged'} (Breiman).
+
 \code{stop_measure} can be set to one of \code{\link[=measure_correlation]{measure_correlation()}},
 \code{\link[=measure_stekhoven_2012]{measure_stekhoven_2012()}}, or \code{\link[=measure_degenerate]{measure_degenerate()}}. The latter is
 applicable to 'mice'-like algorithms and stops the loop when it reaches the
 pre-determined \code{loop_limit}, while the former two are variations on stopping
 criteria that can be used in 'missForest'-like estimation.
 
-\code{clean_step} is a per-variable post-processing function called on each
-variable after it has been imputed. It can be used to ensure that constraints
-are applied to variables. Each item in the list is a function that accepts
-\code{data} and \code{imputed}; where the former is the data-set prior to imputed
-values being drawn (or the preceding complete data set if
-\code{sampler='missforest'}) restricted to the missing cases (in order). The
-function should return a vector the same length and type as \code{imputed} with
-the clean values.
+After the missing values have been drawn for a variable a post-processing
+'cleaning' step can be applied. These steps are provided on a per-variable
+basis in the \code{clean_step} argument. The user provides (for any variable)
+functions that accept arguments named \code{data} and \code{imputed} which,
+respectively, contain the data-set for the rows with missing values as used
+in training the random forest and the imputed values drawn from the (trained)
+random forest. The functions should return a vector of the same length as
+\code{imputed} with the clean values. The cleaning step can ensure that known (a
+priori) constraints on the value are respected.
 
 All the imputed values (over all iterations) are returned, along with; a
 convergence indicator (if applicable); the number of iterations performed;
-the out-of-bag error on a per-iteration and per-variable basis, and; the
-recorded values of the stopping condition measures for each iteration.
+the out-of-bag error on a per-iteration and per-variable basis, the
+recorded values of the stopping condition measures for each iteration, and
+optionally; the random forest for each variable from the final iteration
+(when \code{keep_forests=TRUE}, default is \code{FALSE}).
 }
 \references{
 \itemize{
 \item Bartlett, J. (2014, 6-11 July). \emph{Methodology for multiple imputation for
-missing data in electronic health record data} \link{Conference presentation}.
-International Biometric Conference, Florence, TOS, Italy.
+missing data in electronic health record data} [Conference
+presentation]. International Biometric Conference, Florence, TOS, Italy.
 \href{https://web.archive.org/web/20190819140612/http://thestatsgeek.com/wp-content/uploads/2014/09/RandomForestImpBiometricsConf.pdf}{Archived 2019-08-19}.
+\item Breiman, L. (2001). Random forests. \emph{Machine Learning}, \emph{45}, 5-32.
+\doi{10.1023/A:1010933404324}.
+\item Doove, L.L., Van Buuren, S., & Dusseldorp, E. (2014). Recursive
+partitioning for missing data imputation in the presence of interaction
+\doi{10.1016/j.csda.2013.10.025}.
 \item Stekhoven, D. J. & Buehlmann, P. (2012). MissForest--non-parametric
-missing value imputation for mixed-type data. \emph{Bioinformatics}, 28(1),
+missing value imputation for mixed-type data. \emph{Bioinformatics}, \emph{28}(1),
 112-118. \doi{10.1093/bioinformatics/btr597}.
 \item Van Buuren, S. & Groothuis-Oudshoorn, K. (2011). mice: Multivariate
 Imputation by Chained Equations in R. \emph{Journal of Statistical Software},
 \emph{45}(3), 1-67. \doi{10.18637/jss.v045.i03}.
 }
+}
+\seealso{
+\code{\link[=sampler_step]{sampler_step()}} \code{\link[literanger:train]{literanger::train()}}
 }

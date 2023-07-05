@@ -1,4 +1,5 @@
-# Copyright (c) Cancer Council NSW, 2018-2023. All rights reserved.
+# SPDX-FileCopyrightText: 2023 Stephen Wade <stephematician@gmail.com>
+# SPDX-License-Identifier: MIT
 
 is_valid_data <- function(data, msgs=list()) {
 
@@ -26,7 +27,7 @@ is_valid_model <- function(data, model, msgs=list()) {
 
     msgs %<>% c(msg_if_not(nrow(model) > 0, '\'model\' is empty (no rows)'))
 
-    nm <- names(data0)
+    nm <- names(data)
     all_names <- union(rownames(model), colnames(model))
     not_found <- all_names[!all_names %in% names(data)]
     none_missing <- rownames(model)[
@@ -76,7 +77,7 @@ is_valid_fn_init <- function(fn_init, msgs=list()) {
         msgs %<>% c(
             msg_if_not(
                 is.data.frame(fn_init(data.frame())),
-                paste('\'fn_init(data.frame())\' did not return data.frame'),
+                paste('\'fn_init(data.frame())\' did not return data.frame')
             ), msg_if_not(
                 nrow(fn_init(data.frame(x=numeric()))) == 0,
                 paste('\'fn_init(data.frame(x=numeric()))\' did not return an',
@@ -191,9 +192,9 @@ is_valid_clean_step <- function(data, clean_step, msgs=list()) {
     )
 
     not_handle_empty <- list()
-    for (fn in nm_step) {
+    for (fn in nm_steps) {
         tryCatch({
-            empty_result <- identical(clean_step_[[fn]](data[0,], data[[fn]][0]),
+            empty_result <- identical(clean_step[[fn]](data[0,], data[[fn]][0]),
                                       data[[fn]][0])
             if (!empty_result) not_handle_empty <- c(not_handle_empty, fn)
         }, error=function(...) not_handle_empty <- c(not_handle_empty, fn))
@@ -224,7 +225,7 @@ is_valid_initial_state <- function(data_j, data, msgs=list()) {
     msgs %<>% c(
         msg_if_not(all(!is.na(data_j)),
                    'Initialised data contains NA (missing) values'),
-        # FIXME: test that data.frame and tibble ok?
+      # FIXME: test that data.frame and tibble ok?
         msg_if_not(is.null(attr_equal),
                    paste0('Initialised data and \'data\' differ in attributes: ',
                           paste0(attr_equal, collapse=', '))),
